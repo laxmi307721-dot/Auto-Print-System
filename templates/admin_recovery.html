@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#183d33">
+    <title>Admin Recovery | Sakshi Digital Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { font-family: "Raleway", "Segoe UI", sans-serif; color: #19352d; background: #f2f5f1; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; margin: 0; padding: 24px; background: radial-gradient(ellipse at 50% 0%, #d9eee3 0, #f2f5f1 58%, #e8f0ed 100%); }
+        .recovery-panel { width: min(100%, 500px); padding: 40px; border: 1px solid #dce4dd; border-radius: 10px; background: #fff; box-shadow: 0 18px 55px rgba(24,66,48,.11); }
+        .eyebrow { margin: 0 0 9px; color: #1c6b4b; font-size: 12px; font-weight: 800; }
+        h1 { margin: 0; color: #183d33; font-size: 29px; font-weight: 800; }
+        .copy { margin: 12px 0 22px; color: #64746b; font-size: 15px; line-height: 1.65; }
+        .destination { padding: 16px; border: 1px solid #dce4dd; border-radius: 6px; background: #f7f9f7; }
+        .destination span { display: block; color: #708078; font-size: 12px; font-weight: 600; }
+        .destination input { width: 100%; min-height: 48px; margin-top: 8px; padding: 0 12px; border: 1px solid #dce4dd; border-radius: 5px; color: #19352d; background: #fff; font: inherit; font-size: 16px; }
+        .destination input:focus { border-color: #1c6b4b; outline: 3px solid rgba(28,107,75,.13); }
+        .send-button { width: 100%; min-height: 50px; margin-top: 16px; border: 0; border-radius: 5px; color: #fff; background: #1c6b4b; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .send-button:hover { background: #15583d; }
+        .notice { margin-top: 18px; padding: 14px 16px; border-left: 3px solid #d09232; color: #755016; background: #fff5dc; font-size: 13px; line-height: 1.6; }
+        .error { margin-top: 16px; padding: 12px 14px; border-left: 3px solid #b64b3c; color: #8d342b; background: #fff0ed; font-size: 13px; line-height: 1.5; }
+        a { display: inline-block; margin-top: 24px; color: #1c6b4b; font-size: 14px; font-weight: 800; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (max-width: 520px) { .recovery-panel { padding: 28px 22px; } h1 { font-size: 26px; } }
+    </style>
+</head>
+<body>
+    <main class="recovery-panel">
+        <p class="eyebrow">ACCOUNT RECOVERY</p>
+        <h1>Admin ID / password recovery</h1>
+        <p class="copy">OTP verification ke baad hi account reset hona chahiye. Password ko read ya reveal nahi kiya ja sakta; verification ke baad naya password set hota hai.</p>
+        <form method="post" action="{{ url_for('admin_forgot_password') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="destination">
+                <span>Apna registered WhatsApp number enter karein</span>
+                <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="10-digit mobile number" pattern="[0-9+() -]{10,16}" required>
+            </label>
+            <button class="send-button" type="submit">WhatsApp par OTP bhejein</button>
+        </form>
+        {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+        {% if not otp_configured %}
+        <p class="notice">WhatsApp OTP abhi configure nahi hai. Meta WhatsApp Cloud API ke <strong>WHATSAPP_ACCESS_TOKEN</strong>, <strong>WHATSAPP_PHONE_NUMBER_ID</strong> aur approved <strong>WHATSAPP_OTP_TEMPLATE</strong> set hone par hi OTP bheja ja sakta hai. Registered number page par dikhaya nahi jayega.</p>
+        {% else %}
+        <p class="notice">OTP sirf registered admin number par WhatsApp se bheja jayega. Sahi OTP ke baad admin ID dikhegi aur naya password set kar sakte hain.</p>
+        {% endif %}
+        <a href="{{ url_for('admin_login') }}">← Back to admin sign in</a>
+    </main>
+</body>
+</html>

@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#183d33">
+    <title>Print Desk | Sakshi Digital Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            font-family: "Raleway", "Segoe UI", sans-serif;
+            color: #19352d;
+            background: #f2f5f1;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            --ink: #19352d;
+            --muted: #708078;
+            --line: #dce4dd;
+            --green: #1c6b4b;
+            --green-dark: #183d33;
+            --orange: #e36f4e;
+            --surface: #fff;
+        }
+        * { box-sizing: border-box; }
+        body { min-width: 320px; min-height: 100vh; margin: 0; }
+        button, input, select { font: inherit; }
+        button, a, input, select { -webkit-tap-highlight-color: transparent; }
+        .topbar {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 0 max(28px, calc((100vw - 1180px) / 2));
+            color: #f6f8f5;
+            background: var(--green-dark);
+        }
+        .brand { display: flex; align-items: center; gap: 14px; color: inherit; text-decoration: none; }
+        .brand-mark {
+            width: 52px;
+            height: 52px;
+            display: block;
+            flex: 0 0 52px;
+            border: 2px solid rgba(255,255,255,.62);
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center 48%;
+            box-shadow: 0 2px 12px rgba(0,0,0,.22);
+        }
+        .brand-name { display: block; font-family: "Raleway", sans-serif; font-size: 18px; font-weight: 800; }
+        .brand-caption { display: block; margin-top: 3px; color: #c2d0c8; font-size: 10px; font-weight: 700; }
+        .admin-link { color: #e7eee9; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .admin-link:hover { color: #f1bd62; }
+        main { width: min(1180px, calc(100% - 56px)); margin: 0 auto; padding: 54px 0 72px; }
+        .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+        .eyebrow { margin: 0 0 9px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; }
+        h1 { margin: 0; color: var(--ink); font-family: "Raleway", sans-serif; font-size: 40px; font-weight: 800; line-height: 1.12; }
+        .heading-note { margin: 0 0 3px; color: var(--muted); font-size: 13px; }
+        .workspace { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(275px, .8fr); align-items: start; gap: 54px; }
+        .job-form { padding: 30px 34px 32px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 14px 40px rgba(27, 57, 44, .06); }
+        .section-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .section-number { width: 28px; height: 28px; display: grid; place-items: center; flex: 0 0 28px; border-radius: 50%; color: var(--green); background: #eaf3ed; font-size: 12px; font-weight: 700; }
+        h2 { margin: 0; font-family: "Raleway", sans-serif; font-size: 19px; font-weight: 800; }
+        .form-section + .form-section { margin-top: 28px; padding-top: 25px; border-top: 1px solid #edf0ed; }
+        .field-label, legend { display: block; margin-bottom: 10px; color: #344c42; font-size: 14px; font-weight: 700; }
+        .file-picker {
+            min-height: 116px;
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            padding: 20px 22px;
+            border: 1px dashed #a9bdb0;
+            border-radius: 8px;
+            background: #f8faf8;
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease;
+        }
+        .file-picker:hover, .file-picker:focus-within { border-color: var(--green); background: #f1f7f3; }
+        .file-symbol { width: 46px; height: 54px; display: grid; place-items: center; flex: 0 0 46px; border: 1px solid #d5e2d8; border-radius: 5px; color: var(--green); background: #fff; font-size: 9px; font-weight: 700; }
+        .file-copy { min-width: 0; }
+        .file-title { display: block; overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .file-hint { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+        .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+        .file-picker:focus-within { outline: 3px solid rgba(28, 107, 75, .2); outline-offset: 2px; }
+        fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+        fieldset legend { padding: 0; }
+        .option-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .option { position: relative; min-width: 0; }
+        .option input { position: absolute; opacity: 0; }
+        .option label {
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            color: #4d6157;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease;
+        }
+        .option label::before { width: 16px; height: 16px; content: ""; flex: 0 0 16px; border: 1px solid #aebbb2; border-radius: 50%; background: #fff; }
+        .option input:checked + label { border-color: var(--green); color: var(--green-dark); background: #f1f7f3; }
+        .option input:checked + label::before { border: 5px solid var(--green); }
+        .option input:focus-visible + label { outline: 3px solid rgba(28, 107, 75, .2); outline-offset: 2px; }
+        .copy-control { width: 160px; height: 46px; display: grid; grid-template-columns: 44px 1fr 44px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; }
+        .stepper { border: 0; color: var(--green-dark); background: #f5f8f5; font-size: 21px; cursor: pointer; }
+        .stepper:hover { color: var(--green); background: #eaf3ed; }
+        .copy-input { width: 100%; min-width: 0; border: 0; border-right: 1px solid var(--line); border-left: 1px solid var(--line); outline: 0; color: var(--ink); background: #fff; text-align: center; font-weight: 700; appearance: textfield; }
+        .copy-input::-webkit-inner-spin-button, .copy-input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+        .copy-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+        .adjustment-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+        .adjustment-settings .field { min-width: 0; }
+        .setting-select { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; }
+        .setting-select:disabled { color: #52665d; background: #f2f5f1; opacity: 1; }
+        .range-control { display: flex; align-items: center; gap: 12px; }
+        .range-control input { width: 100%; accent-color: var(--green); }
+        .range-value { min-width: 38px; color: var(--green-dark); font-size: 13px; font-weight: 800; text-align: right; }
+        .manual-crop[hidden], .manual-light[hidden], .back-file[hidden], .image-preview[hidden] { display: none; }
+        .manual-crop { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 22px; }
+        .range-label { display: block; margin-bottom: 6px; color: #52665d; font-size: 12px; font-weight: 700; }
+        .document-previews { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; }
+        .document-previews[hidden], .preview-card[hidden] { display: none; }
+        .preview-card { width: 150px; min-height: 120px; display: grid; align-content: center; justify-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 7px; color: #344c42; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .preview-card:hover { border-color: var(--green); background: #f5f9f6; }
+        .preview-card img { display: block; max-width: 100%; max-height: 88px; object-fit: contain; }
+        .aadhaar-combined-preview {
+            width: 150px;
+            min-height: 120px;
+            display: grid;
+            align-content: center;
+            justify-items: center;
+            gap: 9px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            color: #344c42;
+            background: #fff;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .aadhaar-combined-preview:hover { border-color: var(--green); background: #f5f9f6; }
+        .aadhaar-combined-surface {
+            width: 100%;
+            height: 88px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid #edf1ee;
+            border-radius: 5px;
+            background: linear-gradient(180deg, #f6faf7 0%, #edf3ef 100%);
+        }
+        .aadhaar-combined-cards {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: transform .2s ease;
+        }
+        .aadhaar-combined-cards img {
+            display: block;
+            width: calc(50% - 3px);
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .aadhaar-combined-cards.single-card img { width: 50%; }
+        .aadhaar-combined-cards.single-card img + img { display: none; }
+        .aadhaar-preview-dialog { width: min(94vw, 560px); max-width: 560px; max-height: 92vh; padding: 24px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(14, 38, 28, .3); }
+        .aadhaar-preview-dialog::backdrop { background: rgba(17, 35, 28, .76); }
+        .aadhaar-preview-paper { position: relative; width: min(100%, 360px); aspect-ratio: 210 / 297; overflow: hidden; margin: 0 auto; border: 1px solid #cbd5cd; background: #fff; box-shadow: 0 8px 24px rgba(25, 53, 45, .14); }
+        .aadhaar-preview-pair { position: absolute; top: calc(50% + var(--preview-offset-y, 0%)); left: calc(50% + var(--preview-offset-x, 0%)); display: flex; width: 82.87%; gap: 1.35%; transform: translate(-50%, -50%); }
+        .aadhaar-preview-pair img { display: block; width: calc(50% - .675%); aspect-ratio: 85.6 / 54; object-fit: contain; border: 1px solid #e1e6e2; border-radius: 2px; background: #fff; }
+        .aadhaar-preview-pair.single-card { width: 40.6%; }
+        .aadhaar-preview-pair.single-card img { width: 100%; }
+        .aadhaar-preview-pair.draggable-a4-mode { top: var(--image-top); left: var(--image-left); display: flex; width: var(--image-width); height: var(--image-height); gap: var(--pair-gap, 1.35%); aspect-ratio: auto; transform: none; touch-action: none; }
+        .aadhaar-preview-pair.draggable-a4-mode img:not([hidden]) { width: calc(50% - var(--pair-half-gap, .675%)); height: 100%; aspect-ratio: auto; object-fit: contain; cursor: move; }
+        .aadhaar-preview-pair.draggable-a4-mode.single-card img:not([hidden]) { width: 100%; }
+        .image-resize-handle { position: absolute; z-index: 1; width: 14px; height: 14px; padding: 0; border: 2px solid #fff; border-radius: 3px; background: var(--green); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); transform: translate(-50%, -50%); touch-action: none; }
+        .image-resize-handle[hidden] { display: none; }
+        .image-resize-handle[data-corner="nw"] { top: 0; left: 0; cursor: nwse-resize; }
+        .image-resize-handle[data-corner="ne"] { top: 0; left: 100%; cursor: nesw-resize; }
+        .image-resize-handle[data-corner="sw"] { top: 100%; left: 0; cursor: nesw-resize; }
+        .image-resize-handle[data-corner="se"] { top: 100%; left: 100%; cursor: nwse-resize; }
+        .aadhaar-preview-pair img[hidden] { display: none; }
+        .aadhaar-preview-note { margin: 12px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+        .aadhaar-position-control { margin-top: 18px; }
+        .aadhaar-position-control[hidden] { display: none; }
+        .aadhaar-position-control .field-label { margin-bottom: 7px; }
+        .aadhaar-position-control + .aadhaar-position-control { margin-top: 14px; }
+        .preview-file-icon { width: 40px; height: 48px; display: grid; place-items: center; border: 1px solid #d5e2d8; border-radius: 5px; color: var(--green); font-size: 10px; }
+        .preview-file-icon[hidden], .preview-card img[hidden] { display: none; }
+        .document-editor { width: min(94vw, 900px); max-width: 900px; max-height: 92vh; padding: 24px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(14, 38, 28, .3); }
+        .document-editor::backdrop { background: rgba(17, 35, 28, .76); }
+        .editor-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .editor-header h2 { font-size: 21px; }
+        .editor-close { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; font-size: 21px; cursor: pointer; }
+        .editor-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .editor-tab { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 5px; color: #52665d; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .editor-tab[aria-selected="true"] { border-color: var(--green); color: #fff; background: var(--green); }
+        .editor-stage { min-height: 180px; max-height: 48vh; display: grid; place-items: center; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: #edf1ee; }
+        .editor-stage img, .editor-stage iframe { display: block; width: auto; max-width: 100%; height: auto; max-height: 44vh; object-fit: contain; }
+        .editor-stage iframe { width: 100%; height: 44vh; border: 0; background: #fff; }
+        .editor-stage [hidden] { display: none; }
+        .editor-adjustments { margin-top: 18px; }
+        .editor-adjustments[hidden] { display: none; }
+        .editor-adjustments h3 { margin: 0 0 14px; font-size: 15px; }
+        .editor-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .editor-actions button { min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 5px; color: #52665d; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .editor-actions .editor-done { border-color: var(--green); color: #fff; background: var(--green); }
+        .preview-error { grid-column: 1 / -1; margin: 0; color: #a33b31; font-size: 12px; }
+        .preview-error[hidden] { display: none; }
+        .check-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; color: #344c42; font-size: 14px; font-weight: 700; }
+        .check-row input { width: 18px; height: 18px; flex: 0 0 18px; margin: 0; accent-color: var(--green); }
+        .back-file { grid-column: 1 / -1; }
+        .summary-list strong.multiline { white-space: normal; }
+        .submit-button { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 28px; padding: 0 18px; border: 0; border-radius: 7px; color: #fff; background: var(--green); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .18s ease, transform .18s ease; }
+        .submit-button:hover { transform: translateY(-1px); background: #15583d; }
+        .submit-button:focus-visible { outline: 3px solid rgba(28, 107, 75, .3); outline-offset: 3px; }
+        .submit-arrow { color: #f2c56f; font-size: 19px; }
+        .summary { position: sticky; top: 28px; padding-top: 8px; }
+        .summary-topline { display: flex; align-items: center; justify-content: space-between; padding-bottom: 17px; border-bottom: 1px solid #d5ded7; }
+        .summary-topline h2 { font-size: 16px; }
+        .status-dot { display: inline-flex; align-items: center; gap: 7px; color: #527466; font-size: 11px; font-weight: 700; }
+        .status-dot::before { width: 7px; height: 7px; content: ""; border-radius: 50%; background: #3c9b69; box-shadow: 0 0 0 3px #dcefe2; }
+        .summary-list { margin: 0; padding: 0; list-style: none; }
+        .summary-list li { display: flex; justify-content: space-between; gap: 16px; padding: 15px 0; border-bottom: 1px solid #e2e8e3; color: var(--muted); font-size: 12px; }
+        .summary-list strong { max-width: 58%; overflow: hidden; color: #344c42; font-size: 12px; font-weight: 600; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+        .total-row { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 22px 0 17px; }
+        .total-label { color: #50645a; font-size: 13px; font-weight: 600; }
+        .total-value { color: var(--green-dark); font-family: "Raleway", sans-serif; font-size: 32px; font-weight: 800; }
+        .rate-note { margin: 0; color: var(--muted); font-size: 11px; }
+        .summary-rule { height: 1px; margin: 22px 0; background: #d5ded7; }
+        .counter-note { display: flex; align-items: flex-start; gap: 11px; color: #5b6c63; font-size: 12px; line-height: 1.55; }
+        .counter-mark { width: 24px; height: 24px; display: grid; place-items: center; flex: 0 0 24px; border-radius: 50%; color: #8b5529; background: #f7ead9; font-size: 12px; font-weight: 700; }
+        footer { width: min(1180px, calc(100% - 56px)); margin: 0 auto; padding: 18px 0 24px; border-top: 1px solid #dce4dd; color: #849188; font-size: 11px; }
+        @media (max-width: 820px) {
+            .topbar { min-height: 68px; padding: 0 22px; }
+            main { width: min(100% - 40px, 640px); padding: 38px 0 52px; }
+            .workspace { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+            .job-form { width: 100%; min-width: 0; }
+            .summary { position: static; padding-top: 0; }
+            .page-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+            footer { width: calc(100% - 40px); }
+        }
+        @media (max-width: 520px) {
+            .topbar { min-height: 62px; padding: 0 16px; }
+            .brand { gap: 10px; }
+            .brand-mark { width: 44px; height: 44px; flex-basis: 44px; }
+            .brand-name { font-size: 16px; }
+            main { width: calc(100% - 28px); padding: 30px 0 40px; }
+            h1 { font-size: 30px; }
+            .heading-note { font-size: 12px; }
+            .job-form { padding: 22px 18px 24px; }
+            .option-row { gap: 8px; }
+            .option label { gap: 7px; padding: 10px; font-size: 12px; }
+            footer { width: calc(100% - 28px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Sakshi Digital Studio home">
+            <img class="brand-mark" src="{{ url_for('static', filename='logo.jpeg') }}" alt="">
+            <span><span class="brand-name">Sakshi Digital Studio</span><span class="brand-caption">PRINT DESK</span></span>
+        </a>
+        <a class="admin-link" href="/admin">Admin desk ↗</a>
+    </header>
+
+    <main>
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow">CUSTOMER PRINT DESK</p>
+                <h1>Start a print job</h1>
+            </div>
+            <p class="heading-note">साक्षी डिजिटल स्टूडियो · प्रिंट काउंटर</p>
+        </div>
+
+        <div class="workspace">
+            <form class="job-form" action="/upload" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="image-a4-enabled" name="image_a4" value="">
+                <input type="hidden" id="image-a4-x" name="image_a4_x" value="0">
+                <input type="hidden" id="image-a4-y" name="image_a4_y" value="0">
+                <input type="hidden" id="image-a4-width" name="image_a4_width" value="0">
+                <input type="hidden" id="image-a4-height" name="image_a4_height" value="0">
+                <input type="hidden" id="a4-custom-layout" name="a4_custom_layout" value="">
+                <input type="hidden" id="a4-layout-x" name="a4_layout_x" value="0">
+                <input type="hidden" id="a4-layout-y" name="a4_layout_y" value="0">
+                <input type="hidden" id="a4-layout-width" name="a4_layout_width" value="0">
+                <input type="hidden" id="a4-layout-height" name="a4_layout_height" value="0">
+                <section class="form-section" aria-labelledby="file-heading">
+                    <div class="section-heading">
+                        <span class="section-number" aria-hidden="true">01</span>
+                        <h2 id="file-heading">Choose your document</h2>
+                    </div>
+                    <label class="file-picker" for="file-input">
+                        <span class="file-symbol" aria-hidden="true">PDF<br>IMG</span>
+                        <span class="file-copy">
+                            <span class="file-title" id="file-name">Select a PDF or image</span>
+                            <span class="file-hint" id="file-hint">PDF, JPG or PNG</span>
+                        </span>
+                        <input class="file-input" id="file-input" type="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                    </label>
+                    <div class="document-previews" id="document-previews" hidden>
+                        <button class="preview-card" id="edit-front-button" type="button" hidden>
+                            <img id="preview-image" alt="Front document preview">
+                            <span class="preview-file-icon" id="front-file-icon" hidden>PDF</span>
+                            <span id="front-preview-label">Document · click to crop / light</span>
+                        </button>
+                        <button class="preview-card" id="edit-back-button" type="button" hidden>
+                            <img id="back-preview-image" alt="Aadhaar back-side preview">
+                            <span class="preview-file-icon" id="back-file-icon" hidden>PDF</span>
+                            <span>Back side · click to crop / light</span>
+                        </button>
+                        <button class="aadhaar-combined-preview" id="aadhaar-combined-preview" type="button" aria-label="Open Aadhaar A4 print preview" hidden>
+                            <span class="aadhaar-combined-surface">
+                                <span class="aadhaar-combined-cards" id="aadhaar-combined-cards">
+                                    <img id="combined-front-preview" alt="Aadhaar front preview">
+                                    <img id="combined-back-preview" alt="Aadhaar back preview">
+                                </span>
+                            </span>
+                            <span id="aadhaar-preview-label">Aadhaar · click to view A4 print preview</span>
+                        </button>
+                    </div>
+                    <p class="preview-error" id="preview-error" role="alert" hidden></p>
+                </section>
+
+                <section class="form-section" aria-labelledby="settings-heading">
+                    <div class="section-heading">
+                        <span class="section-number" aria-hidden="true">02</span>
+                        <h2 id="settings-heading">Print settings</h2>
+                    </div>
+                    <fieldset>
+                        <legend>Print colour</legend>
+                        <div class="option-row">
+                            <div class="option">
+                                <input id="print-bw" type="radio" name="print_type" value="Black & White" checked>
+                                <label for="print-bw">Black &amp; white</label>
+                            </div>
+                            <div class="option">
+                                <input id="print-color" type="radio" name="print_type" value="Color">
+                                <label for="print-color">Colour</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div style="margin-top: 20px">
+                        <label class="field-label" for="copies">Number of copies</label>
+                        <div class="copy-control">
+                            <button class="stepper" type="button" data-step="-1" aria-label="Decrease copies">−</button>
+                            <input class="copy-input" id="copies" type="number" name="copies" value="1" min="1" inputmode="numeric" required>
+                            <button class="stepper" type="button" data-step="1" aria-label="Increase copies">+</button>
+                        </div>
+                        <p class="copy-note">1 या अधिक copies · ₹10 per copy</p>
+                    </div>
+                    <div class="form-section" style="margin-top: 24px; padding-top: 22px; border-top: 1px solid #edf0ed">
+                        <div class="adjustment-settings">
+                            <div class="field">
+                                <label class="field-label" for="paper-size">Paper size</label>
+                                <select class="setting-select" id="paper-size" name="paper_size">
+                                    <option value="A4" selected>A4 · 210 × 297 mm</option>
+                                    <option value="A5">A5 · 148 × 210 mm</option>
+                                    <option value="Letter">Letter · 8.5 × 11 in</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <span class="field-label">Crop &amp; lighting</span>
+                                <span class="copy-note">Preview par click karke edit karein</span>
+                            </div>
+                        </div>
+                        <label class="check-row" for="aadhaar-pair">
+                            <input id="aadhaar-pair" name="aadhaar_pair" type="checkbox">
+                            <span>Aadhaar front + back, dono ek A4 side par</span>
+                        </label>
+                        <label class="check-row" for="id-card-a4">
+                            <input id="id-card-a4" name="id_card_a4" type="checkbox">
+                            <span>One-side ID card ko standard size mein A4 par set karein</span>
+                        </label>
+                        <div class="back-file" id="back-file" hidden>
+                            <label class="field-label" for="back-file-input">Aadhaar back-side file <span id="back-file-hint">(two-page PDF ho to optional)</span></label>
+                            <input id="back-file-input" name="back_file" type="file" accept=".pdf,.png,.jpg,.jpeg">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="payment-heading">
+                    <div class="section-heading">
+                        <span class="section-number" aria-hidden="true">03</span>
+                        <h2 id="payment-heading">Payment method</h2>
+                    </div>
+                    <fieldset>
+                        <legend>Choose how you’ll pay</legend>
+                        <div class="option-row">
+                            <div class="option">
+                                <input id="payment-upi" type="radio" name="payment_mode" value="upi" checked>
+                                <label for="payment-upi">UPI payment</label>
+                            </div>
+                            <div class="option">
+                                <input id="payment-cash" type="radio" name="payment_mode" value="cash">
+                                <label for="payment-cash">Cash at counter</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </section>
+
+                <dialog class="document-editor" id="document-editor" aria-labelledby="editor-title">
+                    <div class="editor-header">
+                        <div><p class="eyebrow">DOCUMENT EDITOR</p><h2 id="editor-title">Crop &amp; lighting</h2></div>
+                        <button class="editor-close" id="editor-close" type="button" aria-label="Close editor">×</button>
+                    </div>
+                    <div class="editor-tabs" id="editor-tabs" hidden>
+                        <button class="editor-tab" id="front-tab" type="button" aria-selected="true">Front</button>
+                        <button class="editor-tab" id="back-tab" type="button" aria-selected="false">Back</button>
+                    </div>
+                    <div class="editor-stage">
+                        <img id="editor-image" alt="Selected document preview" hidden>
+                        <iframe id="editor-pdf" title="PDF preview" hidden></iframe>
+                    </div>
+                    <div class="editor-adjustments" id="front-adjustments">
+                        <h3 id="front-adjustment-heading">Front side adjustments</h3>
+                        <div class="adjustment-settings">
+                            <div class="field">
+                                <label class="field-label" for="crop-mode">Crop</label>
+                                <select class="setting-select" id="crop-mode" name="crop_mode">
+                                    <option value="auto" selected>Auto crop</option>
+                                    <option value="manual">Manual crop</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="lighting-mode">Lighting</label>
+                                <select class="setting-select" id="lighting-mode" name="lighting_mode">
+                                    <option value="auto" selected>Auto lighting</option>
+                                    <option value="manual">Manual brightness</option>
+                                </select>
+                            </div>
+                            <div class="manual-crop" id="manual-crop" hidden>
+                                {% for side in ['top', 'right', 'bottom', 'left'] %}
+                                <div>
+                                    <label class="range-label" for="front-crop-{{ side }}">{{ side|title }} margin <span id="front-crop-{{ side }}-value">0%</span></label>
+                                    <input id="front-crop-{{ side }}" name="front_crop_{{ side }}" type="range" min="0" max="40" value="0" data-side="front" data-edge="{{ side }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="field manual-light" id="manual-light" hidden>
+                                <label class="field-label" for="brightness">Brightness</label>
+                                <div class="range-control">
+                                    <input id="brightness" name="brightness" type="range" min="50" max="150" step="5" value="100" data-side="front">
+                                    <span class="range-value" id="brightness-value">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-adjustments" id="back-adjustments" hidden>
+                        <h3>Back side adjustments</h3>
+                        <div class="adjustment-settings">
+                            <div class="field">
+                                <label class="field-label" for="back-crop-mode">Crop</label>
+                                <select class="setting-select" id="back-crop-mode" name="back_crop_mode">
+                                    <option value="auto" selected>Auto crop</option>
+                                    <option value="manual">Manual crop</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="back-lighting-mode">Lighting</label>
+                                <select class="setting-select" id="back-lighting-mode" name="back_lighting_mode">
+                                    <option value="auto" selected>Auto lighting</option>
+                                    <option value="manual">Manual brightness</option>
+                                </select>
+                            </div>
+                            <div class="manual-crop" id="back-manual-crop" hidden>
+                                {% for side in ['top', 'right', 'bottom', 'left'] %}
+                                <div>
+                                    <label class="range-label" for="back-crop-{{ side }}">{{ side|title }} margin <span id="back-crop-{{ side }}-value">0%</span></label>
+                                    <input id="back-crop-{{ side }}" name="back_crop_{{ side }}" type="range" min="0" max="40" value="0" data-side="back" data-edge="{{ side }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="field manual-light" id="back-manual-light" hidden>
+                                <label class="field-label" for="back-brightness">Brightness</label>
+                                <div class="range-control">
+                                    <input id="back-brightness" name="back_brightness" type="range" min="50" max="150" step="5" value="100" data-side="back">
+                                    <span class="range-value" id="back-brightness-value">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-actions">
+                        <button id="editor-cancel" type="button">Cancel</button>
+                        <button class="editor-done" id="editor-done" type="button">Done</button>
+                    </div>
+                </dialog>
+
+                <dialog class="aadhaar-preview-dialog" id="aadhaar-preview-dialog" aria-labelledby="aadhaar-preview-title">
+                    <div class="editor-header">
+                        <div><p class="eyebrow">PRINT PREVIEW</p><h2 id="aadhaar-preview-title">Card layout on A4</h2></div>
+                        <button class="editor-close" id="aadhaar-preview-close" type="button" aria-label="Close A4 preview">×</button>
+                    </div>
+                    <div class="aadhaar-preview-paper" id="aadhaar-preview-paper">
+                        <div class="aadhaar-preview-pair" id="aadhaar-preview-pair">
+                            <img id="a4-front-preview" alt="Card in A4 print layout">
+                            <img id="a4-back-preview" alt="Card back in A4 print layout">
+                            <button class="image-resize-handle" type="button" data-corner="nw" aria-label="Resize image from top left" hidden></button>
+                            <button class="image-resize-handle" type="button" data-corner="ne" aria-label="Resize image from top right" hidden></button>
+                            <button class="image-resize-handle" type="button" data-corner="sw" aria-label="Resize image from bottom left" hidden></button>
+                            <button class="image-resize-handle" type="button" data-corner="se" aria-label="Resize image from bottom right" hidden></button>
+                        </div>
+                    </div>
+                    <p class="aadhaar-preview-note">A4 par placement set karein: upar/niche aur baayein/daayein.</p>
+                    <div class="aadhaar-position-control" id="aadhaar-position-control" hidden>
+                        <label class="field-label" for="aadhaar-position">Upar / niche</label>
+                        <div class="range-control">
+                            <input id="aadhaar-position" name="aadhaar_vertical_offset" type="range" min="-344" max="344" step="1" value="0">
+                            <span class="range-value" id="aadhaar-position-value">0 mm</span>
+                        </div>
+                    </div>
+                    <div class="aadhaar-position-control" id="aadhaar-horizontal-control" hidden>
+                        <label class="field-label" for="aadhaar-horizontal-position">Baayein / daayein</label>
+                        <div class="range-control">
+                            <input id="aadhaar-horizontal-position" name="aadhaar_horizontal_offset" type="range" min="-50" max="50" step="1" value="0">
+                            <span class="range-value" id="aadhaar-horizontal-value">0 mm</span>
+                        </div>
+                    </div>
+                    <div class="editor-actions">
+                        <button id="aadhaar-preview-done" class="editor-done" type="button">Done</button>
+                    </div>
+                </dialog>
+
+                <button class="submit-button" type="submit">
+                    <span>Continue to payment</span>
+                    <span class="submit-arrow" aria-hidden="true">→</span>
+                </button>
+            </form>
+
+            <aside class="summary" aria-labelledby="summary-heading">
+                <div class="summary-topline">
+                    <h2 id="summary-heading">Job summary</h2>
+                    <span class="status-dot">Ready</span>
+                </div>
+                <ul class="summary-list">
+                    <li><span>Document</span><strong id="summary-file">No file selected</strong></li>
+                    <li><span>Print colour</span><strong id="summary-colour">Black &amp; white</strong></li>
+                    <li><span>Copies</span><strong id="summary-copies">1</strong></li>
+                    <li><span>Payment</span><strong id="summary-payment">UPI</strong></li>
+                    <li><span>Paper</span><strong id="summary-paper">A4</strong></li>
+                    <li><span>Crop / lighting</span><strong id="summary-adjustments">Auto / auto</strong></li>
+                    <li id="summary-duplex-row" hidden><span>Print sides</span><strong id="summary-duplex">Single side</strong></li>
+                </ul>
+                <div class="total-row">
+                    <span class="total-label">Estimated total</span>
+                    <strong class="total-value" id="total-value">₹10</strong>
+                </div>
+                <p class="rate-note">₹10 per copy</p>
+                <div class="summary-rule"></div>
+                <div class="counter-note">
+                    <span class="counter-mark" aria-hidden="true">i</span>
+                    <span>UPI print jobs are released after payment is verified at the counter.</span>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer>Sakshi Digital Studio <span aria-hidden="true">·</span> Print Desk</footer>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const backFileInput = document.getElementById('back-file-input');
+        const copiesInput = document.getElementById('copies');
+        const aadhaarPair = document.getElementById('aadhaar-pair');
+        const singleIdCardA4 = document.getElementById('id-card-a4');
+        const previewUrls = { front: null, back: null };
+        const selectedFiles = { front: null, back: null };
+        const margins = ['top', 'right', 'bottom', 'left'];
+        const a4WidthPoints = 595.28;
+        const a4HeightPoints = 841.89;
+        const aadhaarCardWidthPoints = 85.6 * 72 / 25.4;
+        const aadhaarCardHeightPoints = 54 * 72 / 25.4;
+        const editor = document.getElementById('document-editor');
+        const previewPaper = document.getElementById('aadhaar-preview-paper');
+        const previewPair = document.getElementById('aadhaar-preview-pair');
+        let imageA4Layout = null;
+        let a4LayoutPreviewUrl = null;
+        let a4PreviewRequest = 0;
+        let a4PreviewRefreshTimer = null;
+        let activeSide = 'front';
+        let originalSettings = null;
+
+        function isPdf(file) {
+            return file?.name.toLowerCase().endsWith('.pdf');
+        }
+
+        function isImageFile(file) {
+            return ['image/jpeg', 'image/png'].includes(file?.type) || /\.(jpe?g|png)$/i.test(file?.name || '');
+        }
+
+        function isCardA4Mode() {
+            return aadhaarPair.checked || singleIdCardA4.checked;
+        }
+
+        function isImageA4Mode() {
+            return !!selectedFiles.front && isImageFile(selectedFiles.front) && !isCardA4Mode();
+        }
+
+        function isDraggableA4Mode() {
+            return isImageA4Mode() || isCardA4Mode();
+        }
+
+        function updateImageA4Layout() {
+            if (!imageA4Layout) return;
+            const height = imageA4Layout.width * a4WidthPoints / a4HeightPoints / imageA4Layout.aspect;
+            previewPair.style.setProperty('--image-left', `${imageA4Layout.x * 100}%`);
+            previewPair.style.setProperty('--image-top', `${imageA4Layout.y * 100}%`);
+            previewPair.style.setProperty('--image-width', `${imageA4Layout.width * 100}%`);
+            previewPair.style.setProperty('--image-height', `${height * 100}%`);
+            const gapPercent = aadhaarPair.checked ? 8 / (imageA4Layout.width * a4WidthPoints) * 100 : 0;
+            previewPair.style.setProperty('--pair-gap', `${gapPercent}%`);
+            previewPair.style.setProperty('--pair-half-gap', `${gapPercent / 2}%`);
+            document.getElementById('image-a4-enabled').value = isImageA4Mode() ? 'on' : '';
+            document.getElementById('image-a4-x').value = (imageA4Layout.x * a4WidthPoints).toFixed(3);
+            document.getElementById('image-a4-y').value = (imageA4Layout.y * a4HeightPoints).toFixed(3);
+            document.getElementById('image-a4-width').value = (imageA4Layout.width * a4WidthPoints).toFixed(3);
+            document.getElementById('image-a4-height').value = (height * a4HeightPoints).toFixed(3);
+            document.getElementById('a4-custom-layout').value = isDraggableA4Mode() ? 'on' : '';
+            document.getElementById('a4-layout-x').value = (imageA4Layout.x * a4WidthPoints).toFixed(3);
+            document.getElementById('a4-layout-y').value = (imageA4Layout.y * a4HeightPoints).toFixed(3);
+            document.getElementById('a4-layout-width').value = (imageA4Layout.width * a4WidthPoints).toFixed(3);
+            document.getElementById('a4-layout-height').value = (height * a4HeightPoints).toFixed(3);
+            if (isCardA4Mode()) {
+                const horizontal = imageA4Layout.x * a4WidthPoints - (a4WidthPoints - imageA4Layout.width * a4WidthPoints) / 2;
+                const vertical = imageA4Layout.y * a4HeightPoints - (a4HeightPoints - height * a4HeightPoints) / 2;
+                document.getElementById('aadhaar-position').value = String(Math.round(vertical));
+                document.getElementById('aadhaar-horizontal-position').value = String(Math.round(horizontal));
+                document.getElementById('aadhaar-position').min = String(-Math.floor((a4HeightPoints - height * a4HeightPoints) / 2));
+                document.getElementById('aadhaar-position').max = String(Math.floor((a4HeightPoints - height * a4HeightPoints) / 2));
+                document.getElementById('aadhaar-horizontal-position').min = String(-Math.floor((a4WidthPoints - imageA4Layout.width * a4WidthPoints) / 2));
+                document.getElementById('aadhaar-horizontal-position').max = String(Math.floor((a4WidthPoints - imageA4Layout.width * a4WidthPoints) / 2));
+                document.getElementById('aadhaar-position-value').textContent = `${(vertical * 25.4 / 72).toFixed(1)} mm`;
+                document.getElementById('aadhaar-horizontal-value').textContent = `${(horizontal * 25.4 / 72).toFixed(1)} mm`;
+            }
+        }
+
+        function initializeA4Layout(file, imageMode, pairMode) {
+            let aspect;
+            let width;
+            if (imageMode) {
+                const image = document.getElementById('a4-front-preview');
+                if (!image.naturalWidth || !image.naturalHeight) return;
+                aspect = image.naturalWidth / image.naturalHeight;
+                width = Math.min(0.9, 0.9 * a4HeightPoints / a4WidthPoints * aspect);
+            } else {
+                const cardWidth = aadhaarCardWidthPoints;
+                const cardHeight = aadhaarCardHeightPoints;
+                const layoutWidth = pairMode ? cardWidth * 2 + 8 : cardWidth;
+                aspect = layoutWidth / cardHeight;
+                width = layoutWidth / a4WidthPoints;
+            }
+            const height = width * a4WidthPoints / a4HeightPoints / aspect;
+            const horizontal = Number(document.getElementById('aadhaar-horizontal-position').value || 0);
+            const vertical = Number(document.getElementById('aadhaar-position').value || 0);
+            const mode = imageMode ? 'image' : pairMode ? 'pair' : 'single-card';
+            imageA4Layout = {
+                file,
+                mode,
+                aspect,
+                x: Math.max(0, Math.min(1 - width, (1 - width) / 2 + horizontal / a4WidthPoints)),
+                y: Math.max(0, Math.min(1 - height, (1 - height) / 2 + vertical / a4HeightPoints)),
+                width
+            };
+            updateImageA4Layout();
+        }
+
+        async function refreshA4ImagePreview(resetLayout = false) {
+            if (!isImageA4Mode()) return;
+            const file = selectedFiles.front;
+            const requestId = ++a4PreviewRequest;
+            const previewData = new FormData();
+            previewData.append('file', file);
+            previewData.append('crop_mode', document.getElementById('crop-mode').value);
+            previewData.append('lighting_mode', document.getElementById('lighting-mode').value);
+            previewData.append('brightness', document.getElementById('brightness').value);
+            margins.forEach((edge) => {
+                previewData.append(`front_crop_${edge}`, document.getElementById(`front-crop-${edge}`).value);
+            });
+            previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+            try {
+                const response = await fetch('/a4-image-preview', { method: 'POST', body: previewData });
+                if (!response.ok) throw new Error(await response.text() || 'A4 image preview nahi ban saki.');
+                const newPreviewUrl = URL.createObjectURL(await response.blob());
+                if (requestId !== a4PreviewRequest || file !== selectedFiles.front) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    return;
+                }
+                const image = document.getElementById('a4-front-preview');
+                await loadPreviewImage(image, newPreviewUrl);
+                if (requestId !== a4PreviewRequest || file !== selectedFiles.front) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    return;
+                }
+                const oldPreviewUrl = a4LayoutPreviewUrl;
+                a4LayoutPreviewUrl = newPreviewUrl;
+                if (oldPreviewUrl) URL.revokeObjectURL(oldPreviewUrl);
+                const aspect = image.naturalWidth / image.naturalHeight;
+                if (resetLayout || !imageA4Layout || imageA4Layout.file !== file) {
+                    imageA4Layout = null;
+                    initializeA4Layout(file, true, false);
+                } else {
+                    imageA4Layout.aspect = aspect;
+                    imageA4Layout.width = Math.min(
+                        imageA4Layout.width,
+                        aspect * a4HeightPoints / a4WidthPoints
+                    );
+                    const layoutHeight = imageA4Layout.width * a4WidthPoints / a4HeightPoints / aspect;
+                    imageA4Layout.x = Math.max(0, Math.min(imageA4Layout.x, 1 - imageA4Layout.width));
+                    imageA4Layout.y = Math.max(0, Math.min(imageA4Layout.y, 1 - layoutHeight));
+                    updateImageA4Layout();
+                }
+                document.getElementById('preview-error').hidden = true;
+                updatePreviewGrid();
+            } catch (error) {
+                if (requestId !== a4PreviewRequest) return;
+                const errorMessage = document.getElementById('preview-error');
+                errorMessage.textContent = error.message;
+                errorMessage.hidden = false;
+            }
+        }
+
+        function scheduleA4ImagePreviewRefresh() {
+            if (!isImageA4Mode()) return;
+            clearTimeout(a4PreviewRefreshTimer);
+            a4PreviewRefreshTimer = setTimeout(() => refreshA4ImagePreview(), 180);
+        }
+
+        function loadPreviewImage(image, source) {
+            return new Promise((resolve, reject) => {
+                const cleanup = () => {
+                    image.removeEventListener('load', handleLoad);
+                    image.removeEventListener('error', handleError);
+                };
+                const handleLoad = () => { cleanup(); resolve(); };
+                const handleError = () => { cleanup(); reject(new Error('Image load failed')); };
+                image.addEventListener('load', handleLoad, { once: true });
+                image.addEventListener('error', handleError, { once: true });
+                image.src = source;
+                if (image.complete && image.currentSrc === source) {
+                    cleanup();
+                    if (image.naturalWidth) resolve();
+                    else reject(new Error('Image load failed'));
+                }
+            });
+        }
+
+        function releasePreviewUrl(side) {
+            if (previewUrls[side]) URL.revokeObjectURL(previewUrls[side]);
+            previewUrls[side] = null;
+        }
+
+        async function setSelectedFile(side, file, pdfPage = 0) {
+            if (side === 'front' && file !== selectedFiles.front) {
+                a4PreviewRequest += 1;
+                if (a4LayoutPreviewUrl) URL.revokeObjectURL(a4LayoutPreviewUrl);
+                a4LayoutPreviewUrl = null;
+                imageA4Layout = null;
+            }
+            releasePreviewUrl(side);
+            selectedFiles[side] = file || null;
+            const button = document.getElementById(`edit-${side}-button`);
+            const image = document.getElementById(side === 'front' ? 'preview-image' : 'back-preview-image');
+            const icon = document.getElementById(`${side}-file-icon`);
+            const errorMessage = document.getElementById('preview-error');
+            errorMessage.hidden = true;
+            if (!file) {
+                button.hidden = true;
+                image.hidden = true;
+                icon.hidden = true;
+                return;
+            }
+            button.hidden = false;
+            image.hidden = true;
+            if (isPdf(file)) {
+                icon.hidden = false;
+                icon.textContent = 'PDF';
+                const previewData = new FormData();
+                previewData.append('file', file);
+                previewData.append('page', pdfPage);
+                previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+                try {
+                    const response = await fetch('/document-preview', { method: 'POST', body: previewData });
+                    if (!response.ok) throw new Error('PDF page preview nahi ban saki. PDF page count check karein.');
+                    previewUrls[side] = URL.createObjectURL(await response.blob());
+                } catch (error) {
+                    button.hidden = true;
+                    errorMessage.textContent = error.message;
+                    errorMessage.hidden = false;
+                    return;
+                }
+                try {
+                    await loadPreviewImage(image, previewUrls[side]);
+                } catch (error) {
+                    button.hidden = true;
+                    errorMessage.textContent = error.message;
+                    errorMessage.hidden = false;
+                    return;
+                }
+                image.hidden = false;
+                icon.hidden = true;
+            } else if (isImageFile(file)) {
+                previewUrls[side] = URL.createObjectURL(file);
+                try {
+                    await loadPreviewImage(image, previewUrls[side]);
+                } catch (error) {
+                    image.hidden = true;
+                    errorMessage.textContent = 'Image preview nahi khul saki. JPG, JPEG ya PNG file check karein.';
+                    errorMessage.hidden = false;
+                    return;
+                }
+                image.hidden = false;
+                icon.hidden = true;
+            } else {
+                image.hidden = true;
+                icon.hidden = false;
+                icon.textContent = 'PDF';
+            }
+            updatePreviewAppearance(side);
+        }
+
+        function updatePreviewGrid() {
+            const positionSlider = document.getElementById('aadhaar-position');
+            const positionValue = document.getElementById('aadhaar-position-value');
+            const horizontalSlider = document.getElementById('aadhaar-horizontal-position');
+            const horizontalValue = document.getElementById('aadhaar-horizontal-value');
+            const combinedPreview = document.getElementById('aadhaar-combined-preview');
+            const combinedCards = document.getElementById('aadhaar-combined-cards');
+            const frontPreview = document.getElementById('combined-front-preview');
+            const backPreview = document.getElementById('combined-back-preview');
+            const verticalOffset = Number(positionSlider.value || 0);
+            const horizontalOffset = Number(horizontalSlider.value || 0);
+            const pairMode = aadhaarPair.checked;
+            const cardMode = isCardA4Mode();
+            const imageMode = isImageA4Mode();
+            const paperSize = document.getElementById('paper-size');
+            if (cardMode || imageMode) paperSize.value = 'A4';
+            paperSize.disabled = cardMode || imageMode;
+            document.getElementById('document-previews').hidden = !selectedFiles.front;
+            document.getElementById('edit-back-button').hidden = !pairMode || !selectedFiles.back;
+            document.getElementById('aadhaar-position-control').hidden = !cardMode;
+            document.getElementById('aadhaar-horizontal-control').hidden = !cardMode;
+            document.getElementById('image-a4-enabled').value = imageMode ? 'on' : '';
+            document.getElementById('a4-custom-layout').value = cardMode || imageMode ? 'on' : '';
+            positionValue.textContent = `${(verticalOffset * 25.4 / 72).toFixed(1)} mm`;
+            horizontalValue.textContent = `${(horizontalOffset * 25.4 / 72).toFixed(1)} mm`;
+            const shouldShowCombined = selectedFiles.front && (imageMode || (cardMode && (!pairMode || selectedFiles.back || isPdf(selectedFiles.front))));
+            combinedPreview.hidden = !shouldShowCombined;
+            if (shouldShowCombined) {
+                frontPreview.src = previewUrls.front || '';
+                backPreview.src = previewUrls.back || previewUrls.front || '';
+                const previewOffsetY = verticalOffset / 841.89 * 100;
+                const previewOffsetX = horizontalOffset / 595.28 * 100;
+                combinedCards.style.transform = `translate(${previewOffsetX}%, ${previewOffsetY}%)`;
+                const a4FrontSource = imageMode && a4LayoutPreviewUrl ? a4LayoutPreviewUrl : previewUrls.front || '';
+                if (document.getElementById('a4-front-preview').src !== a4FrontSource) {
+                    document.getElementById('a4-front-preview').src = a4FrontSource;
+                }
+                document.getElementById('a4-back-preview').src = previewUrls.back || previewUrls.front || '';
+                document.getElementById('a4-back-preview').hidden = !pairMode;
+                previewPair.classList.toggle('single-card', !pairMode && (cardMode || imageMode));
+                previewPair.classList.toggle('draggable-a4-mode', cardMode || imageMode);
+                combinedCards.classList.toggle('single-card', !pairMode);
+                document.querySelectorAll('.image-resize-handle').forEach((handle) => { handle.hidden = !(imageMode || cardMode); });
+                if (cardMode || imageMode) {
+                    const layoutMode = imageMode ? 'image' : pairMode ? 'pair' : 'single-card';
+                    if (!imageA4Layout || imageA4Layout.file !== selectedFiles.front || imageA4Layout.mode !== layoutMode) {
+                        initializeA4Layout(selectedFiles.front, imageMode, pairMode);
+                    }
+                    updateImageA4Layout();
+                } else {
+                    imageA4Layout = null;
+                }
+                document.getElementById('aadhaar-preview-title').textContent = pairMode
+                    ? 'Aadhaar front + back on A4'
+                    : imageMode ? 'Image on A4' : 'One-side ID card on A4';
+                document.querySelector('.aadhaar-preview-note').textContent = pairMode
+                    ? 'A4 par Aadhaar pair ko upar/niche aur baayein/daayein set karein.'
+                    : 'A4 preview mein kheench kar jagah badlein; kone ke handle se size badlein.';
+                combinedPreview.setAttribute('aria-label', pairMode ? 'Open Aadhaar pair A4 print preview' : imageMode ? 'Open image A4 print preview' : 'Open single-side ID card A4 print preview');
+                document.getElementById('aadhaar-preview-label').textContent = pairMode
+                    ? 'Aadhaar · click to view A4 print preview'
+                    : imageMode ? 'Image · click to view A4 print preview' : 'ID card · click to view A4 print preview';
+                previewPair.style.setProperty('--preview-offset-x', `${previewOffsetX}%`);
+                previewPair.style.setProperty('--preview-offset-y', `${previewOffsetY}%`);
+                if (cardMode && imageA4Layout) {
+                    const layoutHeight = imageA4Layout.width * a4WidthPoints / a4HeightPoints / imageA4Layout.aspect;
+                    imageA4Layout.x = Math.max(0, Math.min(1 - imageA4Layout.width, (1 - imageA4Layout.width) / 2 + horizontalOffset / a4WidthPoints));
+                    imageA4Layout.y = Math.max(0, Math.min(1 - layoutHeight, (1 - layoutHeight) / 2 + verticalOffset / a4HeightPoints));
+                    updateImageA4Layout();
+                }
+                if (!imageMode) updateAadhaarPreviewAppearance('front');
+                if (pairMode) updateAadhaarPreviewAppearance('back');
+            }
+        }
+
+        function updateAadhaarPreviewAppearance(side) {
+            const settings = readSideSettings(side);
+            const filter = settings.lightingMode === 'manual'
+                ? `brightness(${settings.brightness}%)`
+                : 'contrast(1.05)';
+            const clip = settings.cropMode === 'manual'
+                ? `inset(${settings.cropValues[0]}% ${settings.cropValues[1]}% ${settings.cropValues[2]}% ${settings.cropValues[3]}%)`
+                : 'inset(0)';
+            const id = side === 'front' ? 'a4-front-preview' : 'a4-back-preview';
+            const image = document.getElementById(id);
+            image.style.filter = filter;
+            image.style.clipPath = clip;
+            const miniImage = document.getElementById(side === 'front' ? 'combined-front-preview' : 'combined-back-preview');
+            miniImage.style.filter = filter;
+            miniImage.style.clipPath = clip;
+        }
+
+        function getSideElements(side) {
+            return side === 'front'
+                ? { crop: 'crop-mode', lighting: 'lighting-mode', brightness: 'brightness', cropPanel: 'manual-crop', lightPanel: 'manual-light' }
+                : { crop: 'back-crop-mode', lighting: 'back-lighting-mode', brightness: 'back-brightness', cropPanel: 'back-manual-crop', lightPanel: 'back-manual-light' };
+        }
+
+        function readSideSettings(side) {
+            const elements = getSideElements(side);
+            const cropMode = document.getElementById(elements.crop).value;
+            const lightingMode = document.getElementById(elements.lighting).value;
+            const cropValues = margins.map((edge) => document.getElementById(`${side}-crop-${edge}`).value);
+            const brightness = document.getElementById(elements.brightness).value;
+            return { cropMode, lightingMode, cropValues, brightness };
+        }
+
+        function updatePreviewAppearance(side) {
+            const settings = readSideSettings(side);
+            const image = document.getElementById(side === 'front' ? 'preview-image' : 'back-preview-image');
+            const editorImage = document.getElementById('editor-image');
+            const filter = settings.lightingMode === 'manual'
+                ? `brightness(${settings.brightness}%)`
+                : 'contrast(1.05)';
+            const clip = settings.cropMode === 'manual'
+                ? `inset(${settings.cropValues[0]}% ${settings.cropValues[1]}% ${settings.cropValues[2]}% ${settings.cropValues[3]}%)`
+                : 'inset(0)';
+            image.style.filter = filter;
+            image.style.clipPath = clip;
+            if (activeSide === side) {
+                editorImage.style.filter = filter;
+                editorImage.style.clipPath = clip;
+            }
+            if (isCardA4Mode() && (side === 'front' || aadhaarPair.checked)) updateAadhaarPreviewAppearance(side);
+            const brightnessValueId = side === 'front' ? 'brightness-value' : 'back-brightness-value';
+            document.getElementById(brightnessValueId).textContent = `${settings.brightness}%`;
+            margins.forEach((edge, index) => {
+                document.getElementById(`${side}-crop-${edge}-value`).textContent = `${settings.cropValues[index]}%`;
+            });
+        }
+
+        function setEditorSide(side) {
+            activeSide = side;
+            const image = document.getElementById('editor-image');
+            const pdf = document.getElementById('editor-pdf');
+            image.hidden = true;
+            pdf.hidden = true;
+            if (previewUrls[side]) {
+                image.src = previewUrls[side];
+                image.hidden = false;
+                updatePreviewAppearance(side);
+            }
+            document.getElementById('editor-title').textContent = side === 'front' ? 'Front · Crop & lighting' : 'Back · Crop & lighting';
+            document.getElementById('front-adjustments').hidden = side !== 'front';
+            document.getElementById('back-adjustments').hidden = side !== 'back';
+            document.getElementById('front-tab').setAttribute('aria-selected', String(side === 'front'));
+            document.getElementById('back-tab').setAttribute('aria-selected', String(side === 'back'));
+            document.getElementById('editor-tabs').hidden = !aadhaarPair.checked;
+            updateAdjustmentVisibility(side);
+        }
+
+        function updateAdjustmentVisibility(side) {
+            const elements = getSideElements(side);
+            const settings = readSideSettings(side);
+            document.getElementById(elements.cropPanel).hidden = settings.cropMode !== 'manual';
+            document.getElementById(elements.lightPanel).hidden = settings.lightingMode !== 'manual';
+            updatePreviewAppearance(side);
+        }
+
+        function openEditor(side) {
+            activeSide = side;
+            originalSettings = [...editor.querySelectorAll('select, input[type="range"]')].map((input) => [input, input.value]);
+            setEditorSide(side);
+            editor.showModal();
+        }
+
+        function cancelEditor() {
+            if (originalSettings) originalSettings.forEach(([input, value]) => { input.value = value; });
+            editor.close();
+            updateSummary();
+            updatePreviewAppearance('front');
+            if (selectedFiles.back) updatePreviewAppearance('back');
+        }
+
+        function updateBackFileRequirement() {
+            const frontFile = selectedFiles.front;
+            backFileInput.required = aadhaarPair.checked && !!frontFile && !isPdf(frontFile);
+            document.getElementById('back-file-hint').textContent = isPdf(frontFile)
+                ? '(two-page PDF ho to optional)'
+                : '(front image ke saath required)';
+        }
+
+        function updateSummary() {
+            const selectedCopies = Math.max(1, Number(copiesInput.value) || 1);
+            copiesInput.value = selectedCopies;
+            document.getElementById('summary-copies').textContent = selectedCopies;
+            document.getElementById('total-value').textContent = `₹${selectedCopies * 10}`;
+            document.getElementById('summary-colour').textContent = document.querySelector('input[name="print_type"]:checked').value === 'Color' ? 'Colour' : 'Black & white';
+            document.getElementById('summary-payment').textContent = document.querySelector('input[name="payment_mode"]:checked').value === 'upi' ? 'UPI' : 'Cash at counter';
+            document.getElementById('summary-paper').textContent = document.getElementById('paper-size').value;
+            const front = readSideSettings('front');
+            const back = readSideSettings('back');
+            document.getElementById('summary-adjustments').textContent = aadhaarPair.checked
+                ? `Front ${front.cropMode}/${front.lightingMode} · Back ${back.cropMode}/${back.lightingMode}`
+                : `${front.cropMode} / ${front.lightingMode}`;
+            document.getElementById('summary-duplex-row').hidden = !isCardA4Mode() && !isImageA4Mode();
+            document.getElementById('summary-duplex').textContent = aadhaarPair.checked
+                ? 'Aadhaar front + back · 1 A4 side'
+                : singleIdCardA4.checked ? 'ID card · single side · A4' : isImageA4Mode() ? 'Image · A4 layout' : 'Single side';
+            document.getElementById('manual-crop').hidden = front.cropMode !== 'manual' || activeSide !== 'front';
+            document.getElementById('manual-light').hidden = front.lightingMode !== 'manual' || activeSide !== 'front';
+            document.getElementById('back-manual-crop').hidden = back.cropMode !== 'manual' || activeSide !== 'back';
+            document.getElementById('back-manual-light').hidden = back.lightingMode !== 'manual' || activeSide !== 'back';
+        }
+
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-hint').textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+            document.getElementById('summary-file').textContent = file.name;
+            await setSelectedFile('front', file);
+            if (aadhaarPair.checked && !backFileInput.files[0]) {
+                await setSelectedFile('back', isPdf(file) ? file : null, 1);
+            }
+            updatePreviewGrid();
+            updateBackFileRequirement();
+            updateSummary();
+            if (isImageA4Mode()) await refreshA4ImagePreview(true);
+        });
+
+        backFileInput.addEventListener('change', async () => {
+            const file = backFileInput.files[0];
+            await setSelectedFile('back', file);
+            updatePreviewGrid();
+            updateSummary();
+        });
+
+        document.getElementById('edit-front-button').addEventListener('click', () => openEditor('front'));
+        document.getElementById('edit-back-button').addEventListener('click', () => openEditor('back'));
+        document.getElementById('aadhaar-combined-preview').addEventListener('click', () => {
+            updatePreviewGrid();
+            document.getElementById('aadhaar-preview-dialog').showModal();
+        });
+        const aadhaarPreviewDialog = document.getElementById('aadhaar-preview-dialog');
+        document.getElementById('aadhaar-preview-close').addEventListener('click', () => aadhaarPreviewDialog.close());
+        document.getElementById('aadhaar-preview-done').addEventListener('click', () => aadhaarPreviewDialog.close());
+        aadhaarPreviewDialog.addEventListener('click', (event) => {
+            if (event.target === aadhaarPreviewDialog) aadhaarPreviewDialog.close();
+        });
+        let activeImagePointer = null;
+        previewPair.addEventListener('pointerdown', (event) => {
+            if (!isDraggableA4Mode() || !imageA4Layout || !aadhaarPreviewDialog.open) return;
+            const target = event.target instanceof Element ? event.target : null;
+            const handle = target?.closest('.image-resize-handle');
+            if (!handle && target !== document.getElementById('a4-front-preview')) return;
+            event.preventDefault();
+            const paperRect = previewPaper.getBoundingClientRect();
+            activeImagePointer = {
+                pointerId: event.pointerId,
+                action: handle ? 'resize' : 'move',
+                corner: handle?.dataset.corner,
+                startX: event.clientX,
+                startY: event.clientY,
+                layout: { ...imageA4Layout },
+            };
+            previewPair.setPointerCapture(event.pointerId);
+        });
+        previewPair.addEventListener('pointermove', (event) => {
+            if (!activeImagePointer || activeImagePointer.pointerId !== event.pointerId) return;
+            const drag = activeImagePointer;
+            const paperRect = previewPaper.getBoundingClientRect();
+            if (!paperRect.width || !paperRect.height) return;
+            if (drag.action === 'move') {
+                imageA4Layout.x = Math.max(0, Math.min(1 - drag.layout.width, drag.layout.x + (event.clientX - drag.startX) / paperRect.width));
+                const height = drag.layout.width * a4WidthPoints / a4HeightPoints / drag.layout.aspect;
+                imageA4Layout.y = Math.max(0, Math.min(1 - height, drag.layout.y + (event.clientY - drag.startY) / paperRect.height));
+            } else {
+                const corner = drag.corner;
+                const right = corner.endsWith('e');
+                const bottom = corner.startsWith('s');
+                const startLeft = drag.layout.x * paperRect.width;
+                const startTop = drag.layout.y * paperRect.height;
+                const startWidth = drag.layout.width * paperRect.width;
+                const startHeight = startWidth / drag.layout.aspect;
+                const anchorX = right ? startLeft : startLeft + startWidth;
+                const anchorY = bottom ? startTop : startTop + startHeight;
+                const pointerX = event.clientX - paperRect.left;
+                const pointerY = event.clientY - paperRect.top;
+                const wantedWidth = Math.max(
+                    (right ? 1 : -1) * (pointerX - anchorX),
+                    (bottom ? 1 : -1) * (pointerY - anchorY) * drag.layout.aspect
+                );
+                const availableWidth = right ? paperRect.width - anchorX : anchorX;
+                const availableHeight = bottom ? paperRect.height - anchorY : anchorY;
+                const maxWidth = Math.max(1, Math.min(availableWidth, availableHeight * drag.layout.aspect));
+                const width = Math.max(Math.min(24, maxWidth), Math.min(maxWidth, wantedWidth));
+                const height = width / drag.layout.aspect;
+                const left = right ? anchorX : anchorX - width;
+                const top = bottom ? anchorY : anchorY - height;
+                imageA4Layout.width = width / paperRect.width;
+                imageA4Layout.x = left / paperRect.width;
+                imageA4Layout.y = top / paperRect.height;
+            }
+            updateImageA4Layout();
+        });
+        function finishImagePointer(event) {
+            if (!activeImagePointer || activeImagePointer.pointerId !== event.pointerId) return;
+            activeImagePointer = null;
+            updateSummary();
+        }
+        previewPair.addEventListener('pointerup', finishImagePointer);
+        previewPair.addEventListener('pointercancel', finishImagePointer);
+        document.getElementById('front-tab').addEventListener('click', () => setEditorSide('front'));
+        document.getElementById('back-tab').addEventListener('click', () => setEditorSide('back'));
+        document.getElementById('editor-close').addEventListener('click', cancelEditor);
+        document.getElementById('editor-cancel').addEventListener('click', cancelEditor);
+        document.getElementById('editor-done').addEventListener('click', () => { editor.close(); updateSummary(); });
+        editor.addEventListener('cancel', (event) => { event.preventDefault(); cancelEditor(); });
+
+        copiesInput.addEventListener('input', updateSummary);
+        document.getElementById('aadhaar-position').addEventListener('input', () => {
+            updatePreviewGrid();
+            updateSummary();
+        });
+        document.getElementById('aadhaar-horizontal-position').addEventListener('input', () => {
+            updatePreviewGrid();
+            updateSummary();
+        });
+        document.querySelectorAll('input[name="print_type"], input[name="payment_mode"]').forEach((input) => input.addEventListener('change', updateSummary));
+        document.getElementById('paper-size').addEventListener('change', updateSummary);
+        editor.querySelectorAll('select, input[type="range"]').forEach((input) => {
+            input.addEventListener('input', () => {
+                updateAdjustmentVisibility(activeSide);
+                updateSummary();
+                if (activeSide === 'front') scheduleA4ImagePreviewRefresh();
+            });
+            input.addEventListener('change', () => {
+                updateAdjustmentVisibility(activeSide);
+                updateSummary();
+                if (activeSide === 'front') scheduleA4ImagePreviewRefresh();
+            });
+        });
+        aadhaarPair.addEventListener('change', async () => {
+            if (aadhaarPair.checked) singleIdCardA4.checked = false;
+            document.getElementById('back-file').hidden = !aadhaarPair.checked;
+            const paperSize = document.getElementById('paper-size');
+            if (isCardA4Mode()) paperSize.value = 'A4';
+            paperSize.disabled = isCardA4Mode();
+            updateBackFileRequirement();
+            const uploadedBack = backFileInput.files[0];
+            if (aadhaarPair.checked && !uploadedBack && isPdf(selectedFiles.front)) {
+                await setSelectedFile('back', selectedFiles.front, 1);
+            } else if (!aadhaarPair.checked) {
+                await setSelectedFile('back', uploadedBack);
+            }
+            updatePreviewGrid();
+            updateSummary();
+        });
+        singleIdCardA4.addEventListener('change', () => {
+            if (singleIdCardA4.checked) aadhaarPair.checked = false;
+            document.getElementById('back-file').hidden = !aadhaarPair.checked;
+            const paperSize = document.getElementById('paper-size');
+            if (isCardA4Mode()) paperSize.value = 'A4';
+            paperSize.disabled = isCardA4Mode();
+            updateBackFileRequirement();
+            updatePreviewGrid();
+            updateSummary();
+            if (isImageA4Mode()) refreshA4ImagePreview(true);
+        });
+        document.querySelectorAll('.stepper').forEach((button) => button.addEventListener('click', () => {
+            copiesInput.value = Number(copiesInput.value || 1) + Number(button.dataset.step);
+            updateSummary();
+        }));
+        updateSummary();
+    </script>
+</body>
+</html>

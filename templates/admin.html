@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#183d33">
+    <title>Admin Desk | Sakshi Digital Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { font-family: "Raleway", "Segoe UI", sans-serif; color: #19352d; background: #f2f5f1; --green: #1c6b4b; --green-dark: #183d33; --line: #dce4dd; --muted: #708078; }
+        * { box-sizing: border-box; }
+        body { min-width: 320px; min-height: 100vh; display: flex; flex-direction: column; margin: 0; }
+        button { font: inherit; }
+        .topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 max(28px, calc((100vw - 1320px) / 2)); color: #f6f8f5; background: var(--green-dark); }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand img { width: 50px; height: 50px; flex: 0 0 50px; border: 2px solid rgba(255,255,255,.62); border-radius: 50%; object-fit: cover; }
+        .brand-name { margin: 0; font-size: 18px; font-weight: 800; }
+        .brand-caption { margin: 4px 0 0; color: #c2d0c8; font-size: 10px; font-weight: 700; }
+        .topbar-actions { display: flex; align-items: center; gap: 22px; }
+        .admin-email { color: #d5e1da; font-size: 13px; font-weight: 600; }
+        .logout-button { min-height: 38px; padding: 0 13px; border: 1px solid rgba(255,255,255,.32); border-radius: 5px; color: #fff; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .logout-button:hover { color: var(--green-dark); background: #fff; }
+        main { width: min(1320px, calc(100% - 56px)); flex: 1; margin: 0 auto; padding: 48px 0 64px; }
+        .developer-credit { width: min(1320px, calc(100% - 56px)); margin: 0 auto; padding: 0 0 18px; color: var(--muted); font-size: 11px; font-weight: 700; text-align: right; }
+        .heading-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+        .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 11px; font-weight: 800; }
+        h1 { margin: 0; color: var(--green-dark); font-size: 34px; font-weight: 800; }
+        .heading-note { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
+        .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 28px; border-top: 1px solid #d4ded6; border-bottom: 1px solid #d4ded6; }
+        .metric { padding: 18px 22px 18px 0; }
+        .metric + .metric { padding-left: 22px; border-left: 1px solid #d4ded6; }
+        .metric-label { display: block; color: var(--muted); font-size: 12px; font-weight: 600; }
+        .metric-value { display: block; margin-top: 5px; color: var(--green-dark); font-size: 27px; font-weight: 800; }
+        .table-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+        h2 { margin: 0; color: var(--green-dark); font-size: 19px; font-weight: 800; }
+        .refresh-note { color: var(--muted); font-size: 12px; }
+        .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 12px 32px rgba(27,57,44,.05); }
+        table { width: 100%; min-width: 950px; border-collapse: collapse; }
+        th, td { padding: 17px 15px; border-bottom: 1px solid #e8ede8; text-align: left; vertical-align: middle; }
+        th { color: #65776d; background: #f7f9f7; font-size: 11px; font-weight: 800; white-space: nowrap; }
+        td { color: #344c42; font-size: 13px; font-weight: 500; }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr:hover { background: #fbfcfb; }
+        .file-name { max-width: 260px; overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+        .status::before { width: 7px; height: 7px; content: ""; flex: 0 0 7px; border-radius: 50%; background: currentColor; }
+        .status-pending { color: #9a6717; }
+        .status-expired { color: #b64b3c; }
+        .status-printed { color: #1c7952; }
+        .status-other { color: #61736b; }
+        .payment-note { display: block; max-width: 260px; margin-top: 6px; color: #7c6b4a; font-size: 11px; line-height: 1.45; }
+        .btn-preview { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; margin: 0 0 8px; padding: 0 12px; border: 1px solid var(--green); border-radius: 5px; color: var(--green); background: #fff; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+        .btn-preview:hover { color: #fff; background: var(--green); }
+        .btn-approve { min-height: 40px; padding: 0 13px; border: 0; border-radius: 5px; color: #fff; background: var(--green); font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+        .btn-approve:hover { background: #15583d; }
+        .btn-approve:disabled { opacity: .6; cursor: wait; }
+        .empty-state { padding: 44px 20px; color: var(--muted); text-align: center; font-size: 14px; }
+        @media (max-width: 720px) {
+            .topbar { min-height: 68px; padding: 0 18px; }
+            .brand { gap: 10px; }
+            .brand img { width: 42px; height: 42px; flex-basis: 42px; }
+            .brand-name { font-size: 15px; }
+            .brand-caption { font-size: 9px; }
+            .topbar-actions { gap: 10px; }
+            .admin-email { display: none; }
+            main { width: calc(100% - 36px); padding: 34px 0 48px; }
+            .developer-credit { width: calc(100% - 36px); padding-bottom: 14px; }
+            .heading-row { align-items: flex-start; flex-direction: column; gap: 10px; }
+            h1 { font-size: 29px; }
+            .metrics { grid-template-columns: 1fr; }
+            .metric, .metric + .metric { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-left: 0; }
+            .metric + .metric { border-top: 1px solid #d4ded6; }
+            .metric-value { margin: 0; font-size: 22px; }
+            .table-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="">
+            <div>
+                <p class="brand-name">Sakshi Digital Studio</p>
+                <p class="brand-caption">PRINT DESK · ADMIN</p>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <span class="admin-email">{{ admin_email }}</span>
+            <form method="post" action="{{ url_for('admin_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="logout-button" type="submit">Sign out</button>
+            </form>
+        </div>
+    </header>
+    <main>
+        <div class="heading-row">
+            <div>
+                <p class="eyebrow">SHOP OPERATIONS</p>
+                <h1>Admin desk</h1>
+            </div>
+            <p class="heading-note">Print requests aur payment approvals</p>
+        </div>
+        <section class="metrics" aria-label="Request summary">
+            <div class="metric"><span class="metric-label">Total requests</span><strong class="metric-value">{{ requests|length }}</strong></div>
+            <div class="metric"><span class="metric-label">Awaiting action</span><strong class="metric-value">{{ requests|selectattr('status', 'in', ['Pending', 'Payment Reported'])|list|length }}</strong></div>
+            <div class="metric"><span class="metric-label">Printed</span><strong class="metric-value">{{ requests|selectattr('status', 'equalto', 'Approved & Printed')|list|length }}</strong></div>
+        </section>
+        <section aria-labelledby="request-heading">
+            <div class="table-heading">
+                <h2 id="request-heading">Print requests</h2>
+                <span class="refresh-note">List automatically refreshes every 10 seconds</span>
+            </div>
+            <div class="table-wrap">
+                {% if requests %}
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>File</th><th>Print</th><th>Copies</th><th>Paper</th><th>Sides</th><th>Amount</th><th>Payment</th><th>Status</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>#{{ req.id }}</td>
+                            <td class="file-name" title="{{ req.filename }}">{{ req.filename }}</td>
+                            <td>{{ req.print_type }}</td>
+                            <td>{{ req.copies }}</td>
+                            <td>{{ req.paper_size|default('A4') }}</td>
+                            <td>{% if req.aadhaar_pair|default(false) %}Aadhaar · front + back, 1 A4 side{% elif req.id_card_a4|default(false) %}ID card · single side, A4{% elif req.image_a4|default(false) %}Image · A4 layout{% elif req.duplex|default(false) %}Duplex{% else %}Single side{% endif %}</td>
+                            <td>₹{{ req.total_amount }}</td>
+                            <td>{{ 'UPI' if req.payment_mode == 'upi' else 'Cash' }}</td>
+                            <td>
+                                <span id="status-{{ req.id }}" class="status {% if req.status == 'Expired' %}status-expired{% elif req.status in ['Pending', 'Awaiting Payment', 'Payment Reported'] %}status-pending{% elif req.status == 'Approved & Printed' %}status-printed{% else %}status-other{% endif %}">{{ req.status }}</span>
+                                {% if req.payment_mode == 'upi' and req.status == 'Payment Reported' %}<span class="payment-note">ग्राहक ने पेमेंट बताया है; बैंक/UPI ऐप में राशि verify करें</span>{% endif %}
+                            </td>
+                            <td>
+                                <a class="btn-preview" href="{{ url_for('admin_request_preview', req_id=req.id) }}" target="_blank" rel="noopener">Preview PDF</a><br>
+                                {% if req.payment_mode == 'cash' and req.status == 'Pending' %}
+                                <button class="btn-approve" onclick="approvePrint({{ req.id }}, this)">Cash received · Print</button>
+                                {% elif req.payment_mode == 'upi' and req.status == 'Payment Reported' %}
+                                <button class="btn-approve" onclick="approvePrint({{ req.id }}, this)">Verify payment · Print</button>
+                                {% elif req.payment_mode == 'upi' and req.status == 'Awaiting Payment' %}
+                                <span class="refresh-note">पेमेंट की प्रतीक्षा</span>
+                                {% elif req.status == 'Expired' %}
+                                <span class="status status-expired">Expired</span>
+                                {% elif req.status == 'Approved & Printed' %}
+                                <span class="status status-printed">Printed</span>
+                                {% else %}
+                                <span class="refresh-note">{{ req.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">अभी कोई print request नहीं है। नई request आने पर यहां दिखाई देगी।</div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+    <footer class="developer-credit">Developer · Kanishk Rajput</footer>
+    <script>
+        async function approvePrint(reqId, button) {
+            button.disabled = true;
+            try {
+                const response = await fetch('/approve/' + reqId, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content }
+                });
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) location.reload();
+            } catch (error) {
+                alert('Request पूरी नहीं हो सकी। दोबारा कोशिश करें।');
+            } finally {
+                button.disabled = false;
+            }
+        }
+        setInterval(() => location.reload(), 10000);
+    </script>
+</body>
+</html>

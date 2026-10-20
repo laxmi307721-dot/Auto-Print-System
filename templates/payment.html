@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+	<meta charset="UTF-8">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#f3f7f4">
+	<title>UPI Payment | Sakshi Digital</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			color-scheme: light;
+			font-family: "Raleway", "Segoe UI", sans-serif;
+			background: #f3f7f4;
+			color: #172b24;
+		}
+		* { box-sizing: border-box; }
+		body {
+			min-height: 100vh;
+			min-height: 100svh;
+			margin: 0;
+			padding: 24px 16px;
+			display: grid;
+			place-items: center;
+			background: radial-gradient(ellipse at 50% 0%, #d9eee3 0, #f3f7f4 58%, #e8f0ed 100%);
+		}
+		.payment-panel {
+			width: min(100%, 440px);
+			padding: clamp(22px, 6vw, 36px);
+			text-align: center;
+			background: rgba(255, 255, 255, .94);
+			border: 1px solid #dce8e1;
+			border-radius: 16px;
+			box-shadow: 0 18px 55px rgba(24, 66, 48, .12);
+		}
+		.eyebrow { margin: 0 0 8px; color: #527265; font-size: 13px; font-weight: 800; }
+		h1 { margin: 0; font-size: 32px; font-weight: 800; line-height: 1.2; }
+		.amount { margin: 14px 0 4px; color: #087443; font-size: 40px; font-weight: 800; }
+		.hint { margin: 0; color: #61736b; font-size: 15px; line-height: 1.5; }
+		.qr-frame {
+			width: min(68vw, 250px);
+			aspect-ratio: 1;
+			display: grid;
+			place-items: center;
+			margin: 22px auto 18px;
+			padding: 10px;
+			background: #fff;
+			border: 1px solid #e1e9e4;
+			border-radius: 12px;
+		}
+		.qr-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+		.upi-button, .paid-button {
+			width: 100%;
+			min-height: 50px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 12px 16px;
+			border: 0;
+			border-radius: 9px;
+			font: inherit;
+			font-size: 16px;
+			font-weight: 700;
+			text-decoration: none;
+			cursor: pointer;
+		}
+		.upi-button { color: #fff; background: #087443; }
+		.upi-button:active { background: #065c35; }
+		.qr-dialog {
+			width: min(92vw, 440px);
+			padding: 24px;
+			border: 1px solid #dce8e1;
+			border-radius: 14px;
+			color: #172b24;
+			text-align: center;
+			box-shadow: 0 18px 55px rgba(24, 66, 48, .2);
+		}
+		.qr-dialog::backdrop { background: rgba(18, 35, 28, .72); }
+		.qr-dialog h2 { margin: 0 0 8px; font-size: 21px; }
+		.qr-dialog p { margin: 0 0 16px; color: #61736b; font-size: 14px; }
+		.qr-dialog img { display: block; width: min(68vw, 300px); height: auto; margin: 0 auto 18px; }
+		.qr-dialog-actions { display: flex; gap: 10px; }
+		.qr-dialog-actions a, .qr-dialog-actions button {
+			min-height: 46px;
+			flex: 1;
+			display: grid;
+			place-items: center;
+			padding: 10px;
+			border: 0;
+			border-radius: 8px;
+			color: #145d43;
+			background: #e5f2eb;
+			font: inherit;
+			font-size: 14px;
+			font-weight: 700;
+			text-decoration: none;
+			cursor: pointer;
+		}
+		.qr-dialog-actions button { color: #fff; background: #087443; }
+		.paid-button { margin-top: 10px; color: #145d43; background: #e5f2eb; }
+		.paid-button:disabled { opacity: .65; cursor: wait; }
+		.timer { margin: 18px 0 4px; color: #8b4b13; font-size: 14px; font-weight: 700; }
+		.status { min-height: 22px; margin: 10px 0 0; color: #52665d; font-size: 15px; line-height: 1.45; }
+		.status.success { color: #087443; }
+		.status.error { color: #b42318; }
+		@media (max-width: 360px) {
+			body { padding: 14px 10px; }
+			.payment-panel { padding: 20px 16px; }
+		}
+	</style>
+</head>
+<body>
+	<main class="payment-panel">
+		<p class="eyebrow">SAKSHI DIGITAL STUDIO</p>
+		<h1>पेमेंट करें</h1>
+		<p class="amount">₹{{ '%.2f'|format(total_amount) }}</p>
+		<p class="hint">नीचे QR स्कैन करें या UPI ऐप में भुगतान करें</p>
+		<div class="qr-frame">
+			<img src="{{ url_for('static', filename=qr_filename) }}" alt="₹{{ total_amount }} के लिए UPI QR कोड">
+		</div>
+		<button class="upi-button" id="show-qr-button" type="button">UPI भुगतान QR खोलें</button>
+		<button class="paid-button" id="paid-button" type="button">मैंने पेमेंट कर दिया</button>
+		<p class="timer" id="timer" aria-live="polite">समय शेष: 05:00</p>
+		<p class="status" id="status" aria-live="polite">पेमेंट verify होने के बाद ही प्रिंट शुरू होगा।</p>
+	</main>
+	<dialog class="qr-dialog" id="qr-dialog" aria-labelledby="qr-dialog-title">
+		<h2 id="qr-dialog-title">UPI से भुगतान</h2>
+		<p>इस QR को दूसरे फोन से स्कैन करें</p>
+		<img src="{{ url_for('static', filename=qr_filename) }}" alt="₹{{ total_amount }} का UPI payment QR">
+		<div class="qr-dialog-actions">
+			<a href="{{ url_for('static', filename=qr_filename) }}" download="sakshi-payment-qr.png">QR डाउनलोड</a>
+			<button id="close-qr-button" type="button">बंद करें</button>
+		</div>
+	</dialog>
+	<script>
+		const requestId = {{ request_id|tojson }};
+		const expiresAt = {{ expires_at|tojson }};
+		const timerElement = document.getElementById('timer');
+		const statusElement = document.getElementById('status');
+		const paidButton = document.getElementById('paid-button');
+		const qrDialog = document.getElementById('qr-dialog');
+		document.getElementById('show-qr-button').addEventListener('click', () => qrDialog.showModal());
+		document.getElementById('close-qr-button').addEventListener('click', () => qrDialog.close());
+
+		function showStatus(status) {
+			if (status === 'Payment Reported') {
+				statusElement.textContent = 'पेमेंट की सूचना मिल गई। प्रिंट से पहले काउंटर पर verify होगा।';
+				statusElement.className = 'status success';
+				paidButton.disabled = true;
+				paidButton.textContent = 'पेमेंट की सूचना भेज दी गई';
+			} else if (status === 'Approved & Printed') {
+				statusElement.textContent = 'पेमेंट verify हो गया और प्रिंट कमांड भेज दी गई।';
+				statusElement.className = 'status success';
+				paidButton.hidden = true;
+			} else if (status === 'Expired') {
+				statusElement.textContent = 'पेमेंट का समय समाप्त हो गया। कृपया फिर से अपलोड करें।';
+				statusElement.className = 'status error';
+				paidButton.disabled = true;
+			} else if (status === 'Printing') {
+				statusElement.textContent = 'पेमेंट verify हो गया। प्रिंट तैयार हो रहा है।';
+				statusElement.className = 'status success';
+				paidButton.hidden = true;
+			}
+		}
+
+		async function refreshStatus() {
+			try {
+				const response = await fetch(`/payment/${requestId}/status`);
+				if (response.ok) {
+					const data = await response.json();
+					showStatus(data.status);
+				}
+			} catch (error) {
+				statusElement.textContent = 'कनेक्शन नहीं मिला। यह पेज खुला रखें।';
+			}
+		}
+
+		paidButton.addEventListener('click', async () => {
+			paidButton.disabled = true;
+			try {
+				const response = await fetch(`/payment/${requestId}/report`, {
+					method: 'POST',
+					headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content }
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.message || 'पेमेंट की सूचना नहीं भेजी जा सकी।');
+				showStatus(data.status);
+			} catch (error) {
+				statusElement.textContent = error.message;
+				statusElement.className = 'status error';
+				paidButton.disabled = false;
+			}
+		});
+
+		function updateTimer() {
+			const secondsLeft = Math.max(0, Math.ceil((expiresAt * 1000 - Date.now()) / 1000));
+			const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+			const seconds = String(secondsLeft % 60).padStart(2, '0');
+			timerElement.textContent = `समय शेष: ${minutes}:${seconds}`;
+			if (secondsLeft === 0) {
+				timerElement.textContent = 'पेमेंट का समय समाप्त';
+				paidButton.disabled = true;
+			}
+		}
+
+		updateTimer();
+		setInterval(updateTimer, 1000);
+		setInterval(refreshStatus, 3000);
+</script>
+</body>
+</html>

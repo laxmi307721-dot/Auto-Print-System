@@ -1,0 +1,7 @@
+__pycache__/
+instance/admin_password.hash
+instance/admin_password.hash.tmp
+instance/flask_secret_key
+uploads/
+static/*_qr.png
+.env

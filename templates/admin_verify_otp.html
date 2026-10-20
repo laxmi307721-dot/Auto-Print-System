@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#183d33">
+    <title>Verify OTP | Sakshi Digital Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { font-family: "Raleway", "Segoe UI", sans-serif; color: #19352d; background: #f2f5f1; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; margin: 0; padding: 24px; background: radial-gradient(ellipse at 50% 0%, #d9eee3 0, #f2f5f1 58%, #e8f0ed 100%); }
+        .panel { width: min(100%, 460px); padding: 38px; border: 1px solid #dce4dd; border-radius: 10px; background: #fff; box-shadow: 0 18px 55px rgba(24,66,48,.11); }
+        .eyebrow { margin: 0 0 9px; color: #1c6b4b; font-size: 12px; font-weight: 800; }
+        h1 { margin: 0; color: #183d33; font-size: 29px; font-weight: 800; }
+        .copy { margin: 12px 0 24px; color: #64746b; font-size: 15px; line-height: 1.6; }
+        label { display: block; margin-bottom: 8px; color: #344c42; font-size: 14px; font-weight: 700; }
+        input { width: 100%; min-height: 54px; padding: 0 14px; border: 1px solid #dce4dd; border-radius: 6px; font: inherit; font-size: 22px; letter-spacing: 4px; text-align: center; }
+        input:focus { border-color: #1c6b4b; outline: 3px solid rgba(28,107,75,.13); }
+        button { width: 100%; min-height: 52px; margin-top: 18px; border: 0; border-radius: 6px; color: #fff; background: #1c6b4b; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+        button:hover { background: #15583d; }
+        .error { margin: 16px 0 0; padding: 12px 14px; color: #8d342b; background: #fff0ed; font-size: 13px; }
+        a { display: inline-block; margin-top: 21px; color: #1c6b4b; font-size: 14px; font-weight: 800; text-decoration: none; }
+        @media (max-width: 520px) { .panel { padding: 28px 22px; } h1 { font-size: 26px; } }
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <p class="eyebrow">WHATSAPP VERIFICATION</p>
+        <h1>OTP verify karein</h1>
+        <p class="copy">Registered WhatsApp par bheja gaya 6-digit OTP enter karein. OTP 5 minute tak valid hai.</p>
+        <form method="post" action="{{ url_for('admin_verify_otp') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="otp">6-digit OTP</label>
+            <input id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus>
+            <button type="submit">Verify OTP</button>
+        </form>
+        {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+        <a href="{{ url_for('admin_forgot_password') }}">← Recovery par wapas jaayein</a>
+    </main>
+</body>
+</html>

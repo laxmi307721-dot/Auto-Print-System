@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#183d33">
+    <title>Admin Sign In | Sakshi Digital Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { font-family: "Raleway", "Segoe UI", sans-serif; color: #19352d; background: #f2f5f1; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; margin: 0; padding: 24px; background: radial-gradient(ellipse at 50% 0%, #d9eee3 0, #f2f5f1 58%, #e8f0ed 100%); }
+        .login-panel { width: min(100%, 480px); padding: 42px; border: 1px solid #dce4dd; border-radius: 10px; background: #fff; box-shadow: 0 18px 55px rgba(24, 66, 48, .11); }
+        .brand { display: flex; align-items: center; gap: 15px; margin-bottom: 38px; }
+        .brand img { width: 58px; height: 58px; flex: 0 0 58px; border: 2px solid #dce8e1; border-radius: 50%; object-fit: cover; }
+        .brand-name { margin: 0; color: #183d33; font-size: 20px; font-weight: 800; }
+        .brand-caption { margin: 5px 0 0; color: #708078; font-size: 12px; font-weight: 700; }
+        .eyebrow { margin: 0 0 8px; color: #1c6b4b; font-size: 12px; font-weight: 800; }
+        h1 { margin: 0; color: #19352d; font-size: 30px; font-weight: 800; }
+        .intro { margin: 9px 0 28px; color: #708078; font-size: 15px; line-height: 1.55; }
+        label { display: block; margin: 18px 0 8px; color: #344c42; font-size: 14px; font-weight: 700; }
+        input { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid #dce4dd; border-radius: 6px; color: #19352d; background: #fff; font: inherit; font-size: 15px; }
+        input:focus { border-color: #1c6b4b; outline: 3px solid rgba(28,107,75,.13); }
+        button { width: 100%; min-height: 52px; margin-top: 24px; border: 0; border-radius: 6px; color: #fff; background: #1c6b4b; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+        button:hover { background: #15583d; }
+        .recovery-link { display: inline-block; margin-top: 18px; color: #1c6b4b; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .recovery-link:hover { text-decoration: underline; }
+        .message { margin: 16px 0 0; padding: 12px 14px; border-radius: 6px; color: #9b342c; background: #fff0ed; font-size: 13px; line-height: 1.5; }
+        .message.setup { color: #755016; background: #fff5dc; }
+        .message.success { color: #145d43; background: #e5f2eb; }
+        @media (max-width: 520px) { .login-panel { padding: 28px 22px; } .brand { margin-bottom: 30px; } h1 { font-size: 27px; } }
+    </style>
+</head>
+<body>
+    <main class="login-panel">
+        <div class="brand">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="">
+            <div>
+                <p class="brand-name">Sakshi Digital Studio</p>
+                <p class="brand-caption">PRINT DESK · ADMIN</p>
+            </div>
+        </div>
+        <p class="eyebrow">SECURE ACCESS</p>
+        <h1>Admin sign in</h1>
+        <p class="intro">Print requests aur payment approvals dekhne ke liye sign in karein.</p>
+        <form method="post" action="{{ url_for('admin_login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="email">Admin ID</label>
+            <input id="email" name="email" type="email" value="{{ admin_email }}" autocomplete="username" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Sign in</button>
+        </form>
+        <a class="recovery-link" href="{{ url_for('admin_forgot_password') }}">Forgot admin ID or password?</a>
+        {% if success %}
+        <p class="message success" role="status">Naya password save ho gaya. Admin ID se sign in karein.</p>
+        {% elif error %}
+        <p class="message {% if not password_configured %}setup{% endif %}" role="alert">{{ error }}</p>
+        {% elif not password_configured %}
+        <p class="message setup" role="alert">Sign-in enable karne ke liye Windows PowerShell mein <strong>ADMIN_PASSWORD_HASH</strong> set karke server restart karein.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

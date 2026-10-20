@@ -1,0 +1,8 @@
+Flask
+Flask-Limiter
+Flask-WTF
+Pillow
+PyMuPDF
+pywin32
+qrcode
+waitress
