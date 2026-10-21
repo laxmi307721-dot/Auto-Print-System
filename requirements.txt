@@ -3,6 +3,6 @@ Flask-Limiter
 Flask-WTF
 Pillow
 PyMuPDF
-
+gunicorn
 qrcode
 waitress
