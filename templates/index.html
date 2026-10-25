@@ -134,6 +134,19 @@
         .preview-card { width: 150px; min-height: 120px; display: grid; align-content: center; justify-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 7px; color: #344c42; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
         .preview-card:hover { border-color: var(--green); background: #f5f9f6; }
         .preview-card img { display: block; max-width: 100%; max-height: 88px; object-fit: contain; }
+        .batch-file-previews { grid-column: 1 / -1; max-height: 330px; display: grid; gap: 9px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 5px 2px 2px; }
+        .batch-file-previews[hidden] { display: none; }
+        .batch-file-preview { width: 100%; min-height: 100px; display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 12px; padding: 9px; border: 1px solid var(--line); border-radius: 7px; color: #344c42; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+        .batch-file-preview:hover { border-color: var(--green); background: #f5f9f6; }
+        .batch-file-preview img { display: block; width: 132px; height: 88px; object-fit: contain; border: 1px solid #edf1ee; border-radius: 4px; background: #f6f8f6; }
+        .batch-file-preview-info { min-width: 0; display: grid; gap: 6px; }
+        .batch-file-preview-name { overflow-wrap: anywhere; font-size: 12px; font-weight: 700; }
+        .batch-file-preview-type { color: var(--muted); font-size: 11px; }
+        .batch-file-preview-loading { color: var(--muted); font-size: 11px; }
+        @media (max-width: 520px) {
+            .batch-file-preview { grid-template-columns: 96px minmax(0, 1fr); }
+            .batch-file-preview img { width: 96px; height: 72px; }
+        }
         .aadhaar-combined-preview {
             width: 150px;
             min-height: 120px;
@@ -184,6 +197,11 @@
         .aadhaar-combined-cards.single-card img + img { display: none; }
         .aadhaar-preview-dialog { width: min(94vw, 560px); max-width: 560px; max-height: 92vh; padding: 24px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(14, 38, 28, .3); }
         .aadhaar-preview-dialog::backdrop { background: rgba(17, 35, 28, .76); }
+        .batch-preview-dialog { width: min(94vw, 860px); max-width: 860px; }
+        .batch-preview-files { max-height: 100px; overflow: auto; margin: 0 0 12px; padding-left: 24px; color: #52665d; font-size: 12px; line-height: 1.6; }
+        .batch-preview-status { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+        .batch-preview-frame { display: block; width: 100%; height: min(68vh, 760px); border: 1px solid var(--line); border-radius: 6px; background: #edf1ee; }
+        .batch-preview-frame[hidden] { display: none; }
         .aadhaar-preview-paper { position: relative; width: min(100%, 360px); aspect-ratio: 210 / 297; overflow: hidden; margin: 0 auto; border: 1px solid #cbd5cd; background: #fff; box-shadow: 0 8px 24px rgba(25, 53, 45, .14); }
         .aadhaar-preview-pair { position: absolute; top: calc(50% + var(--preview-offset-y, 0%)); left: calc(50% + var(--preview-offset-x, 0%)); display: flex; width: 82.87%; gap: 1.35%; transform: translate(-50%, -50%); }
         .aadhaar-preview-pair img { display: block; width: calc(50% - .675%); aspect-ratio: 85.6 / 54; object-fit: cover; border: 1px solid #e1e6e2; border-radius: 2px; background: #fff; }
@@ -353,13 +371,18 @@
                         <button class="preview-card" id="edit-front-button" type="button" hidden>
                             <img id="preview-image" alt="Front document preview">
                             <span class="preview-file-icon" id="front-file-icon" hidden>PDF</span>
-                            <span id="front-preview-label">Document · click to crop / light</span>
+                            <span id="front-preview-label">Document · click to crop / rotate / light</span>
                         </button>
                         <button class="preview-card" id="edit-back-button" type="button" hidden>
                             <img id="back-preview-image" alt="Aadhaar back-side preview">
                             <span class="preview-file-icon" id="back-file-icon" hidden>PDF</span>
-                            <span>Back side · click to crop / light</span>
+                            <span>Back side · click to crop / rotate / light</span>
                         </button>
+                        <button class="preview-card" id="batch-preview-button" type="button" hidden>
+                            <span class="preview-file-icon">PDF</span>
+                            <span id="batch-preview-label">Review all print files</span>
+                        </button>
+                        <div class="batch-file-previews" id="batch-file-previews" aria-label="Preview of each selected print file" hidden></div>
                         <button class="aadhaar-combined-preview" id="aadhaar-combined-preview" type="button" aria-label="Open Aadhaar A4 print preview" hidden>
                             <span class="aadhaar-combined-surface">
                                 <span class="aadhaar-combined-cards" id="aadhaar-combined-cards">
@@ -461,7 +484,7 @@
 
                 <dialog class="document-editor" id="document-editor" aria-labelledby="editor-title">
                     <div class="editor-header">
-                        <div><p class="eyebrow">DOCUMENT EDITOR</p><h2 id="editor-title">Crop &amp; lighting</h2></div>
+                        <div><p class="eyebrow">DOCUMENT EDITOR</p><h2 id="editor-title">Crop, rotate &amp; lighting</h2></div>
                         <button class="editor-close" id="editor-close" type="button" aria-label="Close editor">×</button>
                     </div>
                     <div class="editor-tabs" id="editor-tabs" hidden>
@@ -507,6 +530,15 @@
                                     <option value="manual">Manual brightness</option>
                                 </select>
                             </div>
+                            <div class="field">
+                                <label class="field-label" for="front-rotation">Rotate</label>
+                                <select class="setting-select" id="front-rotation" name="front_rotation">
+                                    <option value="0" selected>0°</option>
+                                    <option value="90">90° clockwise</option>
+                                    <option value="180">180°</option>
+                                    <option value="270">270° clockwise</option>
+                                </select>
+                            </div>
                             <label class="check-row" for="front-perspective">
                                 <input id="front-perspective" name="front_perspective_enabled" type="checkbox">
                                 <span>Perspective correction (4 corners)</span>
@@ -543,6 +575,15 @@
                                 <select class="setting-select" id="back-lighting-mode" name="back_lighting_mode">
                                     <option value="auto" selected>Auto lighting</option>
                                     <option value="manual">Manual brightness</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="back-rotation">Rotate</label>
+                                <select class="setting-select" id="back-rotation" name="back_rotation">
+                                    <option value="0" selected>0°</option>
+                                    <option value="90">90° clockwise</option>
+                                    <option value="180">180°</option>
+                                    <option value="270">270° clockwise</option>
                                 </select>
                             </div>
                             <label class="check-row" for="back-perspective">
@@ -607,6 +648,16 @@
                     </div>
                 </dialog>
 
+                <dialog class="aadhaar-preview-dialog batch-preview-dialog" id="batch-preview-dialog" aria-labelledby="batch-preview-title">
+                    <div class="editor-header">
+                        <div><p class="eyebrow">PRINT PREVIEW</p><h2 id="batch-preview-title">All selected files</h2></div>
+                        <button class="editor-close" id="batch-preview-close" type="button" aria-label="Close print preview">×</button>
+                    </div>
+                    <ol class="batch-preview-files" id="batch-preview-files"></ol>
+                    <p class="batch-preview-status" id="batch-preview-status" role="status">Print preview is being prepared...</p>
+                    <iframe class="batch-preview-frame" id="batch-preview-frame" title="All selected documents in print order" hidden></iframe>
+                </dialog>
+
                 <button class="submit-button" type="submit">
                     <span>Continue to payment</span>
                     <span class="submit-arrow" aria-hidden="true">→</span>
@@ -654,8 +705,15 @@
         const aadhaarPair = document.getElementById('aadhaar-pair');
         const singleIdCardA4 = document.getElementById('id-card-a4');
         const previewUrls = { front: null, back: null };
+        const processedPreviewUrls = { front: null, back: null };
+        const documentPreviewRequests = { front: 0, back: 0 };
+        const documentPreviewTimers = { front: null, back: null };
         const selectedFiles = { front: null, back: null };
         const selectedPdfPages = { front: 0, back: 0 };
+        const batchFilePreviewUrls = [];
+        let batchFilePreviewRequest = 0;
+        let batchPreviewUrl = null;
+        let batchPreviewRequest = 0;
         const a4CardPreviewUrls = { front: null, back: null };
         const a4CardPreviewRequests = { front: 0, back: 0 };
         const margins = ['top', 'right', 'bottom', 'left'];
@@ -773,6 +831,7 @@
             previewData.append('crop_mode', document.getElementById('crop-mode').value);
             previewData.append('lighting_mode', document.getElementById('lighting-mode').value);
             previewData.append('brightness', document.getElementById('brightness').value);
+            previewData.append('front_rotation', document.getElementById('front-rotation').value);
             margins.forEach((edge) => {
                 previewData.append(`front_crop_${edge}`, document.getElementById(`front-crop-${edge}`).value);
             });
@@ -833,6 +892,7 @@
         }
 
         function scheduleA4ImagePreviewRefresh(side = activeSide) {
+            scheduleDocumentPreviewRefresh(side);
             if (!isImageA4Mode() && !isCardA4Mode()) return;
             clearTimeout(a4PreviewRefreshTimer);
             a4PreviewRefreshTimer = setTimeout(() => {
@@ -856,6 +916,7 @@
             previewData.append(`${side}_crop_mode`, document.getElementById(side === 'front' ? 'crop-mode' : 'back-crop-mode').value);
             previewData.append(`${side}_lighting_mode`, document.getElementById(side === 'front' ? 'lighting-mode' : 'back-lighting-mode').value);
             previewData.append(`${side}_brightness`, document.getElementById(side === 'front' ? 'brightness' : 'back-brightness').value);
+            previewData.append(`${side}_rotation`, document.getElementById(`${side}-rotation`).value);
             margins.forEach((edge) => {
                 previewData.append(`${side}_crop_${edge}`, document.getElementById(`${side}-crop-${edge}`).value);
             });
@@ -934,6 +995,78 @@
             previewUrls[side] = null;
         }
 
+        function releaseProcessedPreviewUrl(side) {
+            if (processedPreviewUrls[side]) URL.revokeObjectURL(processedPreviewUrls[side]);
+            processedPreviewUrls[side] = null;
+        }
+
+        async function refreshDocumentPreview(side) {
+            const file = selectedFiles[side];
+            if (!file || !previewUrls[side]) return;
+            const requestId = ++documentPreviewRequests[side];
+            const previewData = new FormData();
+            previewData.append('file', file);
+            previewData.append('side', side);
+            previewData.append('page', selectedPdfPages[side]);
+            const elements = getSideElements(side);
+            previewData.append(`${side}_crop_mode`, document.getElementById(elements.crop).value);
+            previewData.append(`${side}_lighting_mode`, document.getElementById(elements.lighting).value);
+            previewData.append(`${side}_brightness`, document.getElementById(elements.brightness).value);
+            previewData.append(`${side}_rotation`, document.getElementById(`${side}-rotation`).value);
+            margins.forEach((edge) => {
+                previewData.append(`${side}_crop_${edge}`, document.getElementById(`${side}-crop-${edge}`).value);
+            });
+            if (isPerspectiveEnabled(side)) {
+                previewData.append(`${side}_perspective_enabled`, 'on');
+                perspectiveCorners.forEach((corner) => {
+                    previewData.append(
+                        `${side}_perspective_${corner}_x`,
+                        document.getElementById(`${side}-perspective-${corner}-x`).value,
+                    );
+                    previewData.append(
+                        `${side}_perspective_${corner}_y`,
+                        document.getElementById(`${side}-perspective-${corner}-y`).value,
+                    );
+                });
+            }
+            previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+            let newPreviewUrl = null;
+            try {
+                const response = await fetch('/a4-image-preview', { method: 'POST', body: previewData });
+                if (!response.ok) throw new Error(await response.text() || 'Document preview nahi ban saki.');
+                newPreviewUrl = URL.createObjectURL(await response.blob());
+                if (requestId !== documentPreviewRequests[side] || file !== selectedFiles[side]) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    return;
+                }
+                const image = document.getElementById(side === 'front' ? 'preview-image' : 'back-preview-image');
+                await loadPreviewImage(image, newPreviewUrl);
+                if (requestId !== documentPreviewRequests[side] || file !== selectedFiles[side]) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    return;
+                }
+                const oldPreviewUrl = processedPreviewUrls[side];
+                processedPreviewUrls[side] = newPreviewUrl;
+                newPreviewUrl = null;
+                image.style.filter = 'none';
+                image.style.clipPath = 'none';
+                if (oldPreviewUrl) URL.revokeObjectURL(oldPreviewUrl);
+                updatePreviewGrid();
+                document.getElementById('preview-error').hidden = true;
+            } catch (error) {
+                if (newPreviewUrl) URL.revokeObjectURL(newPreviewUrl);
+                if (requestId !== documentPreviewRequests[side]) return;
+                const errorMessage = document.getElementById('preview-error');
+                errorMessage.textContent = error.message;
+                errorMessage.hidden = false;
+            }
+        }
+
+        function scheduleDocumentPreviewRefresh(side) {
+            clearTimeout(documentPreviewTimers[side]);
+            documentPreviewTimers[side] = setTimeout(() => refreshDocumentPreview(side), 180);
+        }
+
         async function setSelectedFile(side, file, pdfPage = 0) {
             if (side === 'front' && file !== selectedFiles.front) {
                 a4PreviewRequest += 1;
@@ -942,6 +1075,8 @@
                 imageA4Layout = null;
             }
             a4CardPreviewRequests[side] += 1;
+            documentPreviewRequests[side] += 1;
+            releaseProcessedPreviewUrl(side);
             if (a4CardPreviewUrls[side]) URL.revokeObjectURL(a4CardPreviewUrls[side]);
             a4CardPreviewUrls[side] = null;
             releasePreviewUrl(side);
@@ -955,6 +1090,7 @@
             if (!file) {
                 button.hidden = true;
                 image.hidden = true;
+                image.removeAttribute('src');
                 icon.hidden = true;
                 return;
             }
@@ -1005,6 +1141,7 @@
                 icon.textContent = 'PDF';
             }
             updatePreviewAppearance(side);
+            refreshDocumentPreview(side);
         }
 
         function updatePreviewGrid() {
@@ -1025,6 +1162,8 @@
             if (cardMode || imageMode) paperSize.value = 'A4';
             paperSize.disabled = cardMode || imageMode;
             document.getElementById('document-previews').hidden = !selectedFiles.front;
+            document.getElementById('edit-front-button').hidden = !selectedFiles.front || fileInput.files.length > 1
+                && !(aadhaarPair.checked && separateImagesBack.checked);
             document.getElementById('edit-back-button').hidden = !pairMode || !selectedFiles.back;
             document.getElementById('aadhaar-position-control').hidden = !cardMode;
             document.getElementById('aadhaar-horizontal-control').hidden = !cardMode;
@@ -1035,8 +1174,8 @@
             const shouldShowCombined = selectedFiles.front && (imageMode || (cardMode && (!pairMode || selectedFiles.back || isPdf(selectedFiles.front))));
             combinedPreview.hidden = !shouldShowCombined;
             if (shouldShowCombined) {
-                frontPreview.src = previewUrls.front || '';
-                backPreview.src = previewUrls.back || previewUrls.front || '';
+                frontPreview.src = processedPreviewUrls.front || previewUrls.front || '';
+                backPreview.src = processedPreviewUrls.back || processedPreviewUrls.front || previewUrls.back || previewUrls.front || '';
                 const previewOffsetY = verticalOffset / 841.89 * 100;
                 const previewOffsetX = horizontalOffset / 595.28 * 100;
                 combinedCards.style.transform = `translate(${previewOffsetX}%, ${previewOffsetY}%)`;
@@ -1107,8 +1246,13 @@
                 image.style.clipPath = clip;
             }
             const miniImage = document.getElementById(side === 'front' ? 'combined-front-preview' : 'combined-back-preview');
-            miniImage.style.filter = filter;
-            miniImage.style.clipPath = clip;
+            if (processedPreviewUrls[side]) {
+                miniImage.style.filter = 'none';
+                miniImage.style.clipPath = 'none';
+            } else {
+                miniImage.style.filter = filter;
+                miniImage.style.clipPath = clip;
+            }
         }
 
         function getSideElements(side) {
@@ -1162,7 +1306,8 @@
             const lightingMode = document.getElementById(elements.lighting).value;
             const cropValues = margins.map((edge) => document.getElementById(`${side}-crop-${edge}`).value);
             const brightness = document.getElementById(elements.brightness).value;
-            return { cropMode, lightingMode, cropValues, brightness };
+            const rotation = document.getElementById(`${side}-rotation`).value;
+            return { cropMode, lightingMode, cropValues, brightness, rotation };
         }
 
         function updatePreviewAppearance(side) {
@@ -1344,7 +1489,8 @@
                 cropImageWrap.hidden = false;
                 updatePreviewAppearance(side);
             }
-            document.getElementById('editor-title').textContent = side === 'front' ? 'Front · Crop & lighting' : 'Back · Crop & lighting';
+            document.getElementById('editor-title').textContent = side === 'front'
+                ? 'Front · Crop, rotate & lighting' : 'Back · Crop, rotate & lighting';
             document.querySelector('#front-perspective + span').textContent = 'Front photo tedhi ho? 4 corners se seedha karein';
             document.querySelector('#back-perspective + span').textContent = 'Back photo tedhi ho? 4 corners se seedha karein';
             document.getElementById('front-adjustments').hidden = side !== 'front';
@@ -1385,7 +1531,9 @@
             editor.close();
             updateSummary();
             updatePreviewAppearance('front');
+            scheduleDocumentPreviewRefresh('front');
             if (selectedFiles.back) updatePreviewAppearance('back');
+            if (selectedFiles.back) scheduleDocumentPreviewRefresh('back');
         }
 
         function updateBackFileRequirement() {
@@ -1421,6 +1569,7 @@
             const isBatch = files.length > 1 && !pairedSelection;
             const fileList = document.getElementById('selected-file-list');
             const batchNote = document.getElementById('batch-layout-note');
+            const batchPreviewButton = document.getElementById('batch-preview-button');
             const totalSize = files.reduce((size, file) => size + file.size, 0);
             fileInput.setCustomValidity(pairedSelection && (files.length !== 2 || !files.every(isImageFile))
                 ? 'Aadhaar front aur back ke liye upar se theek 2 images ek saath chunein.'
@@ -1444,6 +1593,11 @@
             }));
             fileList.hidden = !isBatch;
             batchNote.hidden = !isBatch;
+            batchPreviewButton.hidden = !isBatch;
+            renderBatchFilePreviews(files);
+            document.getElementById('batch-preview-label').textContent = isBatch
+                ? `Click to scroll through all ${files.length} files in print order`
+                : 'Review all print files';
             aadhaarPair.disabled = isBatch;
             singleIdCardA4.disabled = isBatch;
             if (isBatch) {
@@ -1462,6 +1616,129 @@
                     'image-a4-x', 'image-a4-y', 'image-a4-width', 'image-a4-height',
                     'a4-layout-x', 'a4-layout-y', 'a4-layout-width', 'a4-layout-height',
                 ]) document.getElementById(id).value = '0';
+            }
+        }
+
+        function renderBatchFilePreviews(files) {
+            batchFilePreviewRequest += 1;
+            batchFilePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+            batchFilePreviewUrls.length = 0;
+            const gallery = document.getElementById('batch-file-previews');
+            gallery.replaceChildren();
+            const isBatch = files.length > 1
+                && !(aadhaarPair.checked && separateImagesBack.checked);
+            gallery.hidden = !isBatch;
+            if (!isBatch) return;
+
+            const requestId = batchFilePreviewRequest;
+            files.forEach((file, index) => {
+                const card = document.createElement('button');
+                card.className = 'batch-file-preview';
+                card.type = 'button';
+                card.setAttribute('aria-label', `Open full print preview: ${file.name}`);
+                card.addEventListener('click', openBatchPrintPreview);
+
+                const image = document.createElement('img');
+                image.alt = `${file.name} preview`;
+                image.loading = 'lazy';
+
+                const details = document.createElement('span');
+                details.className = 'batch-file-preview-info';
+                const name = document.createElement('span');
+                name.className = 'batch-file-preview-name';
+                name.textContent = `${index + 1}. ${file.name}`;
+                const type = document.createElement('span');
+                type.className = 'batch-file-preview-type';
+                type.textContent = isPdf(file) ? 'PDF · first page preview' : 'Image';
+                const loading = document.createElement('span');
+                loading.className = 'batch-file-preview-loading';
+                loading.textContent = 'Loading preview...';
+                image.addEventListener('load', () => { loading.hidden = true; }, { once: true });
+                image.addEventListener('error', () => {
+                    loading.textContent = 'Preview could not be loaded';
+                }, { once: true });
+                details.append(name, type, loading);
+                card.append(image, details);
+                gallery.append(card);
+
+                const setPreviewSource = (url) => {
+                    if (requestId !== batchFilePreviewRequest) {
+                        URL.revokeObjectURL(url);
+                        return;
+                    }
+                    batchFilePreviewUrls.push(url);
+                    image.src = url;
+                };
+                if (isPdf(file)) {
+                    const previewData = new FormData();
+                    previewData.append('file', file);
+                    previewData.append('page', '0');
+                    previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+                    fetch('/document-preview', { method: 'POST', body: previewData })
+                        .then((response) => {
+                            if (!response.ok) throw new Error('PDF preview unavailable');
+                            return response.blob();
+                        })
+                        .then((blob) => setPreviewSource(URL.createObjectURL(blob)))
+                        .catch(() => {
+                            if (requestId === batchFilePreviewRequest) {
+                                loading.textContent = 'PDF preview could not be loaded';
+                            }
+                        });
+                } else {
+                    setPreviewSource(URL.createObjectURL(file));
+                }
+            });
+        }
+
+        async function openBatchPrintPreview() {
+            const files = [...fileInput.files];
+            if (files.length < 2 || (aadhaarPair.checked && separateImagesBack.checked)) return;
+            const dialog = document.getElementById('batch-preview-dialog');
+            const frame = document.getElementById('batch-preview-frame');
+            const status = document.getElementById('batch-preview-status');
+            const requestId = ++batchPreviewRequest;
+            document.getElementById('batch-preview-files').replaceChildren(...files.map((file) => {
+                const item = document.createElement('li');
+                item.textContent = file.name;
+                return item;
+            }));
+            status.textContent = 'Print preview is being prepared...';
+            frame.hidden = true;
+            frame.removeAttribute('src');
+            if (batchPreviewUrl) {
+                URL.revokeObjectURL(batchPreviewUrl);
+                batchPreviewUrl = null;
+            }
+            dialog.showModal();
+
+            const previewData = new FormData();
+            files.forEach((file) => previewData.append('files', file, file.name));
+            previewData.append('paper_size', document.getElementById('paper-size').value);
+            previewData.append('crop_mode', document.getElementById('crop-mode').value);
+            previewData.append('lighting_mode', document.getElementById('lighting-mode').value);
+            previewData.append('brightness', document.getElementById('brightness').value);
+            previewData.append('front_rotation', document.getElementById('front-rotation').value);
+            previewData.append('print_type', document.querySelector('input[name="print_type"]:checked').value);
+            margins.forEach((edge) => {
+                previewData.append(`front_crop_${edge}`, document.getElementById(`front-crop-${edge}`).value);
+            });
+            previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+            try {
+                const response = await fetch('/batch-print-preview', { method: 'POST', body: previewData });
+                if (!response.ok) throw new Error(await response.text() || 'Print preview nahi ban saka.');
+                const previewUrl = URL.createObjectURL(await response.blob());
+                if (requestId !== batchPreviewRequest || !dialog.open) {
+                    URL.revokeObjectURL(previewUrl);
+                    return;
+                }
+                batchPreviewUrl = previewUrl;
+                frame.src = previewUrl;
+                frame.hidden = false;
+                status.textContent = 'Scroll karke sabhi files aur PDF pages ko print order mein dekhein.';
+            } catch (error) {
+                if (requestId !== batchPreviewRequest) return;
+                status.textContent = error.message;
             }
         }
 
@@ -1484,8 +1761,8 @@
             const front = readSideSettings('front');
             const back = readSideSettings('back');
             document.getElementById('summary-adjustments').textContent = aadhaarPair.checked
-                ? `Front ${front.cropMode}/${front.lightingMode} · Back ${back.cropMode}/${back.lightingMode}`
-                : `${front.cropMode} / ${front.lightingMode}`;
+                ? `Front ${front.cropMode}/${front.lightingMode}/${front.rotation}° · Back ${back.cropMode}/${back.lightingMode}/${back.rotation}°`
+                : `${front.cropMode} / ${front.lightingMode} / ${front.rotation}°`;
             document.getElementById('summary-duplex-row').hidden = !isCardA4Mode() && !isImageA4Mode();
             document.getElementById('summary-duplex').textContent = aadhaarPair.checked
                 ? 'Aadhaar front + back · 1 A4 side'
@@ -1573,6 +1850,18 @@
         document.getElementById('aadhaar-preview-done').addEventListener('click', () => aadhaarPreviewDialog.close());
         aadhaarPreviewDialog.addEventListener('click', (event) => {
             if (event.target === aadhaarPreviewDialog) aadhaarPreviewDialog.close();
+        });
+        const batchPreviewDialog = document.getElementById('batch-preview-dialog');
+        document.getElementById('batch-preview-button').addEventListener('click', openBatchPrintPreview);
+        document.getElementById('batch-preview-close').addEventListener('click', () => batchPreviewDialog.close());
+        batchPreviewDialog.addEventListener('click', (event) => {
+            if (event.target === batchPreviewDialog) batchPreviewDialog.close();
+        });
+        batchPreviewDialog.addEventListener('close', () => {
+            batchPreviewRequest += 1;
+            if (batchPreviewUrl) URL.revokeObjectURL(batchPreviewUrl);
+            batchPreviewUrl = null;
+            document.getElementById('batch-preview-frame').removeAttribute('src');
         });
         let activeImagePointer = null;
         previewPair.addEventListener('pointerdown', (event) => {

@@ -402,7 +402,9 @@ def get_perspective_points(form, side):
     validate_perspective_points(points)
     return points
 
-def crop_and_adjust_image(image, crop_mode, margins, lighting_mode, brightness, perspective_points=None):
+def crop_and_adjust_image(
+    image, crop_mode, margins, lighting_mode, brightness, perspective_points=None, rotation=0
+):
     image = perspective_correct_image(image, perspective_points)
     if crop_mode == 'manual':
         top, right, bottom, left = margins
@@ -436,6 +438,8 @@ def crop_and_adjust_image(image, crop_mode, margins, lighting_mode, brightness, 
         image = ImageEnhance.Contrast(image).enhance(1.05)
     else:
         image = ImageEnhance.Brightness(image).enhance(brightness)
+    if rotation:
+        image = image.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
     return image
 
 def prepare_print_image(image, rect, print_type):
@@ -474,6 +478,8 @@ def render_print_pdf(
     print_type='Black & White',
     front_perspective=None,
     back_perspective=None,
+    front_rotation=0,
+    back_rotation=0,
 ):
     output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}_print.pdf")
     page_width, page_height = PAPER_SIZES[paper_size]
@@ -501,12 +507,13 @@ def render_print_pdf(
                 brightness,
             )
             images = [crop_and_adjust_image(
-                front, crop_mode, margins, lighting_mode, brightness, front_perspective
+                front, crop_mode, margins, lighting_mode, brightness, front_perspective,
+                front_rotation,
             )]
             if aadhaar_pair:
                 images.append(crop_and_adjust_image(
                     back, back_crop_mode, back_margins, back_lighting_mode, back_brightness,
-                    back_perspective,
+                    back_perspective, back_rotation,
                 ))
             card_width, card_height = AADHAAR_CARD_SIZE
             gap = 8
@@ -540,7 +547,8 @@ def render_print_pdf(
         elif image_a4:
             image = next(get_document_images(front_path, first_page_only=True))
             image = crop_and_adjust_image(
-                image, crop_mode, margins, lighting_mode, brightness, front_perspective
+                image, crop_mode, margins, lighting_mode, brightness, front_perspective,
+                front_rotation,
             )
             page = output.new_page(width=page_width, height=page_height)
             layout_x = a4_layout_x if a4_custom_layout else image_a4_x
@@ -562,7 +570,9 @@ def render_print_pdf(
             page.insert_image(rect, stream=image_data.getvalue())
         else:
             for source in get_document_images(front_path):
-                image = crop_and_adjust_image(source, crop_mode, margins, lighting_mode, brightness)
+                image = crop_and_adjust_image(
+                    source, crop_mode, margins, lighting_mode, brightness, rotation=front_rotation
+                )
                 page = output.new_page(width=page_width, height=page_height)
                 scale = min(page_width / image.width, page_height / image.height)
                 width = image.width * scale
@@ -588,7 +598,10 @@ def render_print_pdf(
     finally:
         output.close()
 
-def render_print_pdf_batch(filepaths, paper_size, crop_mode, margins, lighting_mode, brightness, print_type='Black & White'):
+def render_print_pdf_batch(
+    filepaths, paper_size, crop_mode, margins, lighting_mode, brightness, print_type='Black & White',
+    rotation=0,
+):
     output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}_print.pdf")
     temporary_paths = []
     output = fitz.open()
@@ -602,6 +615,7 @@ def render_print_pdf_batch(filepaths, paper_size, crop_mode, margins, lighting_m
                 lighting_mode,
                 brightness,
                 print_type=print_type,
+                front_rotation=rotation,
             )
             temporary_paths.append(rendered_path)
             with fitz.open(rendered_path) as rendered_document:
@@ -822,6 +836,79 @@ def index():
         max_upload_size_mb=app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024),
     )
 
+@app.route('/batch-print-preview', methods=['POST'])
+@limiter.limit('10 per minute')
+def batch_print_preview():
+    uploaded_files = [
+        uploaded_file for uploaded_file in request.files.getlist('files')
+        if uploaded_file and uploaded_file.filename
+    ]
+    if len(uploaded_files) < 2 or len(uploaded_files) > 10:
+        return "Batch preview ke liye 2 se 10 files chahiye", 400
+    if any(not allowed_file(uploaded_file.filename) for uploaded_file in uploaded_files):
+        return "Sirf PDF ya JPG/PNG files ka preview ban sakta hai", 400
+
+    paper_size = request.form.get('paper_size', 'A4')
+    crop_mode = request.form.get('crop_mode', 'auto')
+    lighting_mode = request.form.get('lighting_mode', 'auto')
+    print_type = request.form.get('print_type', 'Black & White')
+    try:
+        margins = tuple(
+            float(request.form.get(f'front_crop_{edge}', 0))
+            for edge in ('top', 'right', 'bottom', 'left')
+        )
+        brightness = float(request.form.get('brightness', 100)) / 100
+        rotation = int(request.form.get('front_rotation', 0))
+    except (TypeError, ValueError):
+        return "Print preview settings valid nahi hain", 400
+    if paper_size not in PAPER_SIZES or crop_mode not in ('auto', 'manual') or lighting_mode not in ('auto', 'manual'):
+        return "Print preview settings valid nahi hain", 400
+    if print_type not in ('Black & White', 'Color'):
+        return "Print colour setting valid nahi hai", 400
+    if (
+        any(not math.isfinite(value) or value < 0 or value >= 90 for value in margins)
+        or margins[1] + margins[3] >= 90
+        or margins[0] + margins[2] >= 90
+        or not math.isfinite(brightness)
+        or not 0.5 <= brightness <= 1.5
+        or rotation not in (0, 90, 180, 270)
+    ):
+        return "Crop, brightness ya rotation settings valid nahi hain", 400
+
+    preview_path = None
+    try:
+        with tempfile.TemporaryDirectory(prefix='print-batch-preview-') as temporary_directory:
+            filepaths = []
+            for index, uploaded_file in enumerate(uploaded_files):
+                extension = os.path.splitext(secure_filename(uploaded_file.filename))[1].lower()
+                filepath = os.path.join(temporary_directory, f'{index}{extension}')
+                uploaded_file.save(filepath)
+                filepaths.append(filepath)
+            preview_path = render_print_pdf_batch(
+                filepaths,
+                paper_size,
+                crop_mode,
+                margins,
+                lighting_mode,
+                brightness,
+                print_type,
+                rotation,
+            )
+        response = send_file(
+            preview_path,
+            mimetype='application/pdf',
+            as_attachment=False,
+            download_name='print-preview.pdf',
+            max_age=0,
+        )
+        response.call_on_close(lambda: delete_uploaded_file(preview_path))
+        return response
+    except Exception as error:
+        if preview_path and os.path.exists(preview_path):
+            delete_uploaded_file(preview_path)
+        print(f"Batch print preview failed: {error}")
+        return "Batch print preview nahi ban saka. Files aur print settings check karein.", 400
+
 @app.route('/document-preview', methods=['POST'])
 @limiter.limit('20 per minute')
 def document_preview():
@@ -875,6 +962,12 @@ def a4_image_preview():
             perspective_points = get_perspective_points(request.form, side)
         except ValueError as error:
             return str(error), 400
+        try:
+            rotation = int(request.form.get(f'{side}_rotation', request.form.get('rotation', 0)))
+        except (TypeError, ValueError):
+            return "Rotation setting valid nahi hai", 400
+        if rotation not in (0, 90, 180, 270):
+            return "Rotation 0, 90, 180 ya 270 degree honi chahiye", 400
         if uploaded_file.filename.lower().endswith('.pdf'):
             with fitz.open(stream=uploaded_file.read(), filetype='pdf') as document:
                 if page_index >= document.page_count:
@@ -884,7 +977,7 @@ def a4_image_preview():
         else:
             image = ImageOps.exif_transpose(Image.open(uploaded_file)).convert('RGB')
         image = crop_and_adjust_image(
-            image, crop_mode, margins, lighting_mode, brightness, perspective_points
+            image, crop_mode, margins, lighting_mode, brightness, perspective_points, rotation
         )
         if fit_card:
             image = ImageOps.fit(
@@ -949,6 +1042,8 @@ def upload_file():
         back_margins = tuple(float(request.form.get(f'back_{name}', 0)) for name in ('crop_top', 'crop_right', 'crop_bottom', 'crop_left'))
         brightness = float(request.form.get('brightness', 100)) / 100
         back_brightness = float(request.form.get('back_brightness', 100)) / 100
+        front_rotation = int(request.form.get('front_rotation', 0))
+        back_rotation = int(request.form.get('back_rotation', 0))
         aadhaar_vertical_offset = int(request.form.get('aadhaar_vertical_offset', 0))
         aadhaar_horizontal_offset = int(request.form.get('aadhaar_horizontal_offset', 0))
         image_a4_x = float(request.form.get('image_a4_x', 0))
@@ -980,6 +1075,8 @@ def upload_file():
         return "चुनी गई crop ya lighting setting valid nahi hai", 400
     if back_crop_mode not in ('auto', 'manual') or back_lighting_mode not in ('auto', 'manual'):
         return "Back-side crop ya lighting setting valid nahi hai", 400
+    if front_rotation not in (0, 90, 180, 270) or back_rotation not in (0, 90, 180, 270):
+        return "Rotation 0, 90, 180 ya 270 degree honi chahiye", 400
     if any(value < 0 or value >= 90 for value in margins):
         return "Crop margin 0 se 90 percent se kam rakhein", 400
     if any(value < 0 or value >= 90 for value in back_margins):
@@ -1074,6 +1171,7 @@ def upload_file():
                 lighting_mode,
                 brightness,
                 print_type,
+                front_rotation,
             )
         else:
             processed_filepath = render_print_pdf(
@@ -1102,6 +1200,8 @@ def upload_file():
                 print_type,
                 front_perspective,
                 back_perspective,
+                front_rotation,
+                back_rotation,
             )
     except Exception as error:
         preparation_error = str(error)
