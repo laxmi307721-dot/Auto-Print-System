@@ -600,22 +600,23 @@ def render_print_pdf(
 
 def render_print_pdf_batch(
     filepaths, paper_size, crop_mode, margins, lighting_mode, brightness, print_type='Black & White',
-    rotation=0,
+    rotation=0, adjustments=None,
 ):
     output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}_print.pdf")
     temporary_paths = []
     output = fitz.open()
     try:
-        for filepath in filepaths:
+        for index, filepath in enumerate(filepaths):
+            file_adjustment = adjustments[index] if adjustments else {}
             rendered_path = render_print_pdf(
                 filepath,
                 paper_size,
-                crop_mode,
-                margins,
-                lighting_mode,
-                brightness,
+                file_adjustment.get('crop_mode', crop_mode),
+                file_adjustment.get('margins', margins),
+                file_adjustment.get('lighting_mode', lighting_mode),
+                file_adjustment.get('brightness', brightness),
                 print_type=print_type,
-                front_rotation=rotation,
+                front_rotation=file_adjustment.get('rotation', rotation),
             )
             temporary_paths.append(rendered_path)
             with fitz.open(rendered_path) as rendered_document:
@@ -632,6 +633,53 @@ def render_print_pdf_batch(
         output.close()
         for temporary_path in temporary_paths:
             delete_uploaded_file(temporary_path)
+
+def get_batch_adjustments(form, file_count, crop_mode, margins, lighting_mode, brightness, rotation):
+    raw_adjustments = form.get('batch_adjustments')
+    if not raw_adjustments:
+        return []
+    try:
+        adjustments = json.loads(raw_adjustments)
+    except (TypeError, ValueError) as error:
+        raise ValueError('Batch file adjustments valid nahi hain.') from error
+    if not isinstance(adjustments, list) or len(adjustments) != file_count:
+        raise ValueError('Har selected file ki settings dena zaroori hai.')
+
+    validated = []
+    for adjustment in adjustments:
+        if not isinstance(adjustment, dict):
+            raise ValueError('Batch file adjustments valid nahi hain.')
+        file_crop_mode = adjustment.get('crop_mode', crop_mode)
+        file_lighting_mode = adjustment.get('lighting_mode', lighting_mode)
+        file_rotation = adjustment.get('rotation', rotation)
+        file_brightness = adjustment.get('brightness', brightness * 100)
+        file_margins = adjustment.get('margins', margins)
+        try:
+            file_rotation = int(file_rotation)
+            file_brightness = float(file_brightness) / 100
+            file_margins = tuple(float(value) for value in file_margins)
+        except (TypeError, ValueError) as error:
+            raise ValueError('Batch crop, lighting ya rotation setting valid nahi hai.') from error
+        if (
+            file_crop_mode not in ('auto', 'manual')
+            or file_lighting_mode not in ('auto', 'manual')
+            or file_rotation not in (0, 90, 180, 270)
+            or len(file_margins) != 4
+            or any(not math.isfinite(value) or value < 0 or value >= 90 for value in file_margins)
+            or file_margins[1] + file_margins[3] >= 90
+            or file_margins[0] + file_margins[2] >= 90
+            or not math.isfinite(file_brightness)
+            or not 0.5 <= file_brightness <= 1.5
+        ):
+            raise ValueError('Batch crop, lighting ya rotation setting valid nahi hai.')
+        validated.append({
+            'crop_mode': file_crop_mode,
+            'margins': file_margins,
+            'lighting_mode': file_lighting_mode,
+            'brightness': file_brightness,
+            'rotation': file_rotation,
+        })
+    return validated
 
 def expire_unpaid_request(req):
     if (
@@ -874,6 +922,12 @@ def batch_print_preview():
         or rotation not in (0, 90, 180, 270)
     ):
         return "Crop, brightness ya rotation settings valid nahi hain", 400
+    try:
+        adjustments = get_batch_adjustments(
+            request.form, len(uploaded_files), crop_mode, margins, lighting_mode, brightness, rotation
+        )
+    except ValueError as error:
+        return str(error), 400
 
     preview_path = None
     try:
@@ -893,6 +947,7 @@ def batch_print_preview():
                 brightness,
                 print_type,
                 rotation,
+                adjustments,
             )
         response = send_file(
             preview_path,
@@ -1077,6 +1132,15 @@ def upload_file():
         return "Back-side crop ya lighting setting valid nahi hai", 400
     if front_rotation not in (0, 90, 180, 270) or back_rotation not in (0, 90, 180, 270):
         return "Rotation 0, 90, 180 ya 270 degree honi chahiye", 400
+    batch_adjustments = []
+    if len(uploaded_files) > 1:
+        try:
+            batch_adjustments = get_batch_adjustments(
+                request.form, len(uploaded_files), crop_mode, margins, lighting_mode, brightness,
+                front_rotation,
+            )
+        except ValueError as error:
+            return str(error), 400
     if any(value < 0 or value >= 90 for value in margins):
         return "Crop margin 0 se 90 percent se kam rakhein", 400
     if any(value < 0 or value >= 90 for value in back_margins):
@@ -1172,6 +1236,7 @@ def upload_file():
                 brightness,
                 print_type,
                 front_rotation,
+                batch_adjustments,
             )
         else:
             processed_filepath = render_print_pdf(
