@@ -3,9 +3,15 @@ Flask-Limiter
 Flask-WTF
 Pillow
 PyMuPDF
+<<<<<<< HEAD
 requests
 redis
 
 qrcode
 waitress
 pywin32; sys_platform == "win32"
+=======
+gunicorn
+qrcode
+waitress
+>>>>>>> 0dbc9143f1e333d71f6de058f694c807a406b717
