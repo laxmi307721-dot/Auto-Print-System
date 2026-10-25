@@ -3,5 +3,6 @@ instance/admin_password.hash
 instance/admin_password.hash.tmp
 instance/flask_secret_key
 uploads/
+/logs/
 static/*_qr.png
 .env

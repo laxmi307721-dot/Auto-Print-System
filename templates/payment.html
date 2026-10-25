@@ -51,7 +51,7 @@
 			border-radius: 12px;
 		}
 		.qr-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
-		.upi-button, .paid-button {
+		.paid-button {
 			width: 100%;
 			min-height: 50px;
 			display: flex;
@@ -66,8 +66,6 @@
 			text-decoration: none;
 			cursor: pointer;
 		}
-		.upi-button { color: #fff; background: #087443; }
-		.upi-button:active { background: #065c35; }
 		.qr-dialog {
 			width: min(92vw, 440px);
 			padding: 24px;
@@ -116,11 +114,12 @@
 		<p class="eyebrow">SAKSHI DIGITAL STUDIO</p>
 		<h1>पेमेंट करें</h1>
 		<p class="amount">₹{{ '%.2f'|format(total_amount) }}</p>
-		<p class="hint">नीचे QR स्कैन करें या UPI ऐप में भुगतान करें</p>
+		<p class="hint">{{ document_count }} {{ 'file' if document_count == 1 else 'files' }} × {{ copies }} {{ 'copy' if copies == 1 else 'copies' }} · ₹10 प्रति file प्रति copy</p>
+		<p class="hint">QR scan karein — order ki rakam UPI app mein apne-aap bhar jayegi</p>
 		<div class="qr-frame">
-			<img src="{{ url_for('static', filename=qr_filename) }}" alt="₹{{ total_amount }} के लिए UPI QR कोड">
+			<img src="{{ url_for('payment_qr', req_id=request_id) }}" alt="₹{{ total_amount }} के लिए UPI QR कोड">
 		</div>
-		<button class="upi-button" id="show-qr-button" type="button">UPI भुगतान QR खोलें</button>
+		<button class="paid-button" id="show-qr-button" type="button">दूसरे फोन से QR स्कैन करें</button>
 		<button class="paid-button" id="paid-button" type="button">मैंने पेमेंट कर दिया</button>
 		<p class="timer" id="timer" aria-live="polite">समय शेष: 05:00</p>
 		<p class="status" id="status" aria-live="polite">पेमेंट verify होने के बाद ही प्रिंट शुरू होगा।</p>
@@ -128,9 +127,9 @@
 	<dialog class="qr-dialog" id="qr-dialog" aria-labelledby="qr-dialog-title">
 		<h2 id="qr-dialog-title">UPI से भुगतान</h2>
 		<p>इस QR को दूसरे फोन से स्कैन करें</p>
-		<img src="{{ url_for('static', filename=qr_filename) }}" alt="₹{{ total_amount }} का UPI payment QR">
+		<img src="{{ url_for('payment_qr', req_id=request_id) }}" alt="₹{{ total_amount }} का UPI payment QR">
 		<div class="qr-dialog-actions">
-			<a href="{{ url_for('static', filename=qr_filename) }}" download="sakshi-payment-qr.png">QR डाउनलोड</a>
+			<a href="{{ url_for('payment_qr', req_id=request_id) }}" download="sakshi-payment-qr.png">QR डाउनलोड</a>
 			<button id="close-qr-button" type="button">बंद करें</button>
 		</div>
 	</dialog>
@@ -158,7 +157,7 @@
 				statusElement.textContent = 'पेमेंट का समय समाप्त हो गया। कृपया फिर से अपलोड करें।';
 				statusElement.className = 'status error';
 				paidButton.disabled = true;
-			} else if (status === 'Printing') {
+			} else if (status === 'Printing' || status === 'Agent Printing') {
 				statusElement.textContent = 'पेमेंट verify हो गया। प्रिंट तैयार हो रहा है।';
 				statusElement.className = 'status success';
 				paidButton.hidden = true;

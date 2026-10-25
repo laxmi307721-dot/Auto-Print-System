@@ -83,6 +83,10 @@
         .file-copy { min-width: 0; }
         .file-title { display: block; overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
         .file-hint { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+        .selected-file-list { max-height: 132px; overflow: auto; margin: 10px 0 0; padding-left: 22px; color: #52665d; font-size: 12px; line-height: 1.6; }
+        .selected-file-list[hidden], .batch-layout-note[hidden] { display: none; }
+        .batch-layout-note { margin: 12px 0 0; color: #8b5529; font-size: 12px; line-height: 1.5; }
+        .check-row input:disabled + span { color: #87938b; }
         .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
         .file-picker:focus-within { outline: 3px solid rgba(28, 107, 75, .2); outline-offset: 2px; }
         fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
@@ -148,6 +152,7 @@
             cursor: pointer;
         }
         .aadhaar-combined-preview:hover { border-color: var(--green); background: #f5f9f6; }
+        .aadhaar-combined-preview[hidden] { display: none; }
         .aadhaar-combined-surface {
             width: 100%;
             height: 88px;
@@ -181,11 +186,11 @@
         .aadhaar-preview-dialog::backdrop { background: rgba(17, 35, 28, .76); }
         .aadhaar-preview-paper { position: relative; width: min(100%, 360px); aspect-ratio: 210 / 297; overflow: hidden; margin: 0 auto; border: 1px solid #cbd5cd; background: #fff; box-shadow: 0 8px 24px rgba(25, 53, 45, .14); }
         .aadhaar-preview-pair { position: absolute; top: calc(50% + var(--preview-offset-y, 0%)); left: calc(50% + var(--preview-offset-x, 0%)); display: flex; width: 82.87%; gap: 1.35%; transform: translate(-50%, -50%); }
-        .aadhaar-preview-pair img { display: block; width: calc(50% - .675%); aspect-ratio: 85.6 / 54; object-fit: contain; border: 1px solid #e1e6e2; border-radius: 2px; background: #fff; }
+        .aadhaar-preview-pair img { display: block; width: calc(50% - .675%); aspect-ratio: 85.6 / 54; object-fit: cover; border: 1px solid #e1e6e2; border-radius: 2px; background: #fff; }
         .aadhaar-preview-pair.single-card { width: 40.6%; }
         .aadhaar-preview-pair.single-card img { width: 100%; }
         .aadhaar-preview-pair.draggable-a4-mode { top: var(--image-top); left: var(--image-left); display: flex; width: var(--image-width); height: var(--image-height); gap: var(--pair-gap, 1.35%); aspect-ratio: auto; transform: none; touch-action: none; }
-        .aadhaar-preview-pair.draggable-a4-mode img:not([hidden]) { width: calc(50% - var(--pair-half-gap, .675%)); height: 100%; aspect-ratio: auto; object-fit: contain; cursor: move; }
+        .aadhaar-preview-pair.draggable-a4-mode img:not([hidden]) { width: calc(50% - var(--pair-half-gap, .675%)); height: 100%; aspect-ratio: auto; object-fit: cover; cursor: move; }
         .aadhaar-preview-pair.draggable-a4-mode.single-card img:not([hidden]) { width: 100%; }
         .image-resize-handle { position: absolute; z-index: 1; width: 14px; height: 14px; padding: 0; border: 2px solid #fff; border-radius: 3px; background: var(--green); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); transform: translate(-50%, -50%); touch-action: none; }
         .image-resize-handle[hidden] { display: none; }
@@ -207,11 +212,31 @@
         .editor-header h2 { font-size: 21px; }
         .editor-close { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; font-size: 21px; cursor: pointer; }
         .editor-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .editor-tabs[hidden] { display: none; }
         .editor-tab { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 5px; color: #52665d; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
         .editor-tab[aria-selected="true"] { border-color: var(--green); color: #fff; background: var(--green); }
         .editor-stage { min-height: 180px; max-height: 48vh; display: grid; place-items: center; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: #edf1ee; }
-        .editor-stage img, .editor-stage iframe { display: block; width: auto; max-width: 100%; height: auto; max-height: 44vh; object-fit: contain; }
-        .editor-stage iframe { width: 100%; height: 44vh; border: 0; background: #fff; }
+        .crop-image-wrap { position: relative; display: inline-block; max-width: 100%; max-height: 44vh; line-height: 0; touch-action: none; }
+        .crop-image-wrap[hidden] { display: none; }
+        .crop-image-wrap img, .editor-stage iframe { display: block; width: auto; max-width: 100%; height: auto; max-height: 44vh; object-fit: contain; }
+        .crop-selection { position: absolute; z-index: 1; border: 2px solid #1c6b4b; background: rgba(255, 255, 255, .08); box-shadow: 0 0 0 9999px rgba(17, 35, 28, .48); cursor: move; }
+        .crop-selection[hidden], .crop-selection-handle[hidden] { display: none; }
+        .crop-selection-handle { position: absolute; width: 14px; height: 14px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #1c6b4b; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); touch-action: none; }
+        .crop-selection-handle[data-corner="nw"] { top: 0; left: 0; cursor: nwse-resize; transform: translate(-50%, -50%); }
+        .crop-selection-handle[data-corner="ne"] { top: 0; right: 0; cursor: nesw-resize; transform: translate(50%, -50%); }
+        .crop-selection-handle[data-corner="sw"] { bottom: 0; left: 0; cursor: nesw-resize; transform: translate(-50%, 50%); }
+        .crop-selection-handle[data-corner="se"] { right: 0; bottom: 0; cursor: nwse-resize; transform: translate(50%, 50%); }
+        .perspective-overlay { position: absolute; inset: 0; z-index: 2; touch-action: none; }
+        .perspective-overlay[hidden] { display: none; }
+        .perspective-overlay svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .perspective-outline { fill: rgba(28, 107, 75, .12); stroke: #1c6b4b; stroke-width: 3; vector-effect: non-scaling-stroke; }
+        .perspective-handle { position: absolute; width: 18px; height: 18px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #1c6b4b; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); transform: translate(-50%, -50%); cursor: crosshair; touch-action: none; }
+        .perspective-handle[data-corner="tl"], .perspective-handle[data-corner="br"] { cursor: nwse-resize; }
+        .perspective-handle[data-corner="tr"], .perspective-handle[data-corner="bl"] { cursor: nesw-resize; }
+        .crop-instructions { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .crop-instructions[hidden] { display: none; }
+        .editor-stage iframe { width: 100%; }
+        .editor-stage iframe { height: 44vh; border: 0; background: #fff; }
         .editor-stage [hidden] { display: none; }
         .editor-adjustments { margin-top: 18px; }
         .editor-adjustments[hidden] { display: none; }
@@ -293,6 +318,12 @@
         <div class="workspace">
             <form class="job-form" action="/upload" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% for side in ['front', 'back'] %}
+                {% for corner, x, y in [('tl', 0, 0), ('tr', 100, 0), ('br', 100, 100), ('bl', 0, 100)] %}
+                <input type="hidden" id="{{ side }}-perspective-{{ corner }}-x" name="{{ side }}_perspective_{{ corner }}_x" value="{{ x }}">
+                <input type="hidden" id="{{ side }}-perspective-{{ corner }}-y" name="{{ side }}_perspective_{{ corner }}_y" value="{{ y }}">
+                {% endfor %}
+                {% endfor %}
                 <input type="hidden" id="image-a4-enabled" name="image_a4" value="">
                 <input type="hidden" id="image-a4-x" name="image_a4_x" value="0">
                 <input type="hidden" id="image-a4-y" name="image_a4_y" value="0">
@@ -312,10 +343,12 @@
                         <span class="file-symbol" aria-hidden="true">PDF<br>IMG</span>
                         <span class="file-copy">
                             <span class="file-title" id="file-name">Select a PDF or image</span>
-                            <span class="file-hint" id="file-hint">PDF, JPG or PNG</span>
+                            <span class="file-hint" id="file-hint">Up to 10 files · PDF, JPG or PNG · {{ max_upload_size_mb }} MB total</span>
                         </span>
-                        <input class="file-input" id="file-input" type="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                        <input class="file-input" id="file-input" type="file" name="files" accept=".pdf,.png,.jpg,.jpeg" data-max-upload-mb="{{ max_upload_size_mb }}" multiple required>
                     </label>
+                    <ol class="selected-file-list" id="selected-file-list" hidden></ol>
+                    <p class="batch-layout-note" id="batch-layout-note" hidden>सभी चुनी हुई files एक combined print job में जाएँगी; सभी पर एक जैसी settings और copies लागू होंगी। Aadhaar / ID-card A4 layout एक समय में एक document के लिए ही उपलब्ध है।</p>
                     <div class="document-previews" id="document-previews" hidden>
                         <button class="preview-card" id="edit-front-button" type="button" hidden>
                             <img id="preview-image" alt="Front document preview">
@@ -365,7 +398,7 @@
                             <input class="copy-input" id="copies" type="number" name="copies" value="1" min="1" inputmode="numeric" required>
                             <button class="stepper" type="button" data-step="1" aria-label="Increase copies">+</button>
                         </div>
-                        <p class="copy-note">1 या अधिक copies · ₹10 per copy</p>
+                        <p class="copy-note">हर file · ₹10 प्रति copy</p>
                     </div>
                     <div class="form-section" style="margin-top: 24px; padding-top: 22px; border-top: 1px solid #edf0ed">
                         <div class="adjustment-settings">
@@ -392,6 +425,15 @@
                         </label>
                         <div class="back-file" id="back-file" hidden>
                             <label class="field-label" for="back-file-input">Aadhaar back-side file <span id="back-file-hint">(two-page PDF ho to optional)</span></label>
+                            <label class="check-row" id="same-image-back-row" for="same-image-back" hidden>
+                                <input id="same-image-back" name="same_image_back" type="checkbox">
+                                <span>Front aur back ek hi photo mein hain (dono ko alag crop karein)</span>
+                            </label>
+                            <label class="check-row" id="separate-images-back-row" for="separate-images-back" hidden>
+                                <input id="separate-images-back" name="separate_images_back" type="checkbox">
+                                <span>Front aur back ki 2 alag images ek saath select karein</span>
+                            </label>
+                            <p class="copy-note" id="separate-images-back-hint" hidden>Is option ko select karke upar file picker mein dono images ek saath chunein: pehli front, doosri back.</p>
                             <input id="back-file-input" name="back_file" type="file" accept=".pdf,.png,.jpg,.jpeg">
                         </div>
                     </div>
@@ -427,9 +469,27 @@
                         <button class="editor-tab" id="back-tab" type="button" aria-selected="false">Back</button>
                     </div>
                     <div class="editor-stage">
-                        <img id="editor-image" alt="Selected document preview" hidden>
+                        <div class="crop-image-wrap" id="crop-image-wrap" hidden>
+                            <img id="editor-image" alt="Selected document preview">
+                            <div class="crop-selection" id="crop-selection" hidden>
+                                <button class="crop-selection-handle" type="button" data-corner="nw" aria-label="Resize crop from top left"></button>
+                                <button class="crop-selection-handle" type="button" data-corner="ne" aria-label="Resize crop from top right"></button>
+                                <button class="crop-selection-handle" type="button" data-corner="sw" aria-label="Resize crop from bottom left"></button>
+                                <button class="crop-selection-handle" type="button" data-corner="se" aria-label="Resize crop from bottom right"></button>
+                            </div>
+                            <div class="perspective-overlay" id="perspective-overlay" hidden>
+                                <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+                                    <polygon class="perspective-outline" id="perspective-outline"></polygon>
+                                </svg>
+                                <button class="perspective-handle" type="button" data-corner="tl" aria-label="Move perspective top-left corner"></button>
+                                <button class="perspective-handle" type="button" data-corner="tr" aria-label="Move perspective top-right corner"></button>
+                                <button class="perspective-handle" type="button" data-corner="br" aria-label="Move perspective bottom-right corner"></button>
+                                <button class="perspective-handle" type="button" data-corner="bl" aria-label="Move perspective bottom-left corner"></button>
+                            </div>
+                        </div>
                         <iframe id="editor-pdf" title="PDF preview" hidden></iframe>
                     </div>
+                    <p class="crop-instructions" id="crop-instructions" hidden>Image par kheench kar crop area select karein. Box ke andar drag karke jagah badlein, kone ke dots se size adjust karein.</p>
                     <div class="editor-adjustments" id="front-adjustments">
                         <h3 id="front-adjustment-heading">Front side adjustments</h3>
                         <div class="adjustment-settings">
@@ -447,11 +507,15 @@
                                     <option value="manual">Manual brightness</option>
                                 </select>
                             </div>
+                            <label class="check-row" for="front-perspective">
+                                <input id="front-perspective" name="front_perspective_enabled" type="checkbox">
+                                <span>Perspective correction (4 corners)</span>
+                            </label>
                             <div class="manual-crop" id="manual-crop" hidden>
                                 {% for side in ['top', 'right', 'bottom', 'left'] %}
                                 <div>
                                     <label class="range-label" for="front-crop-{{ side }}">{{ side|title }} margin <span id="front-crop-{{ side }}-value">0%</span></label>
-                                    <input id="front-crop-{{ side }}" name="front_crop_{{ side }}" type="range" min="0" max="40" value="0" data-side="front" data-edge="{{ side }}">
+                                    <input id="front-crop-{{ side }}" name="front_crop_{{ side }}" type="range" min="0" max="89.9" step="0.1" value="0" data-side="front" data-edge="{{ side }}">
                                 </div>
                                 {% endfor %}
                             </div>
@@ -481,11 +545,15 @@
                                     <option value="manual">Manual brightness</option>
                                 </select>
                             </div>
+                            <label class="check-row" for="back-perspective">
+                                <input id="back-perspective" name="back_perspective_enabled" type="checkbox">
+                                <span>Perspective correction (4 corners)</span>
+                            </label>
                             <div class="manual-crop" id="back-manual-crop" hidden>
                                 {% for side in ['top', 'right', 'bottom', 'left'] %}
                                 <div>
                                     <label class="range-label" for="back-crop-{{ side }}">{{ side|title }} margin <span id="back-crop-{{ side }}-value">0%</span></label>
-                                    <input id="back-crop-{{ side }}" name="back_crop_{{ side }}" type="range" min="0" max="40" value="0" data-side="back" data-edge="{{ side }}">
+                                    <input id="back-crop-{{ side }}" name="back_crop_{{ side }}" type="range" min="0" max="89.9" step="0.1" value="0" data-side="back" data-edge="{{ side }}">
                                 </div>
                                 {% endfor %}
                             </div>
@@ -563,7 +631,7 @@
                     <span class="total-label">Estimated total</span>
                     <strong class="total-value" id="total-value">₹10</strong>
                 </div>
-                <p class="rate-note">₹10 per copy</p>
+                <p class="rate-note" id="rate-note">₹10 × 1 file × 1 copy</p>
                 <div class="summary-rule"></div>
                 <div class="counter-note">
                     <span class="counter-mark" aria-hidden="true">i</span>
@@ -577,18 +645,32 @@
 
     <script>
         const fileInput = document.getElementById('file-input');
+        const maxUploadSizeMb = Number(fileInput.dataset.maxUploadMb);
+        const maxUploadSizeBytes = maxUploadSizeMb * 1024 * 1024;
         const backFileInput = document.getElementById('back-file-input');
+        const sameImageBack = document.getElementById('same-image-back');
+        const separateImagesBack = document.getElementById('separate-images-back');
         const copiesInput = document.getElementById('copies');
         const aadhaarPair = document.getElementById('aadhaar-pair');
         const singleIdCardA4 = document.getElementById('id-card-a4');
         const previewUrls = { front: null, back: null };
         const selectedFiles = { front: null, back: null };
+        const selectedPdfPages = { front: 0, back: 0 };
+        const a4CardPreviewUrls = { front: null, back: null };
+        const a4CardPreviewRequests = { front: 0, back: 0 };
         const margins = ['top', 'right', 'bottom', 'left'];
+        const perspectiveCorners = ['tl', 'tr', 'br', 'bl'];
+        const perspectivePoints = {
+            front: { tl: [0, 0], tr: [1, 0], br: [1, 1], bl: [0, 1] },
+            back: { tl: [0, 0], tr: [1, 0], br: [1, 1], bl: [0, 1] },
+        };
         const a4WidthPoints = 595.28;
         const a4HeightPoints = 841.89;
         const aadhaarCardWidthPoints = 85.6 * 72 / 25.4;
         const aadhaarCardHeightPoints = 54 * 72 / 25.4;
         const editor = document.getElementById('document-editor');
+        const cropImageWrap = document.getElementById('crop-image-wrap');
+        const cropSelection = document.getElementById('crop-selection');
         const previewPaper = document.getElementById('aadhaar-preview-paper');
         const previewPair = document.getElementById('aadhaar-preview-pair');
         let imageA4Layout = null;
@@ -611,7 +693,7 @@
         }
 
         function isImageA4Mode() {
-            return !!selectedFiles.front && isImageFile(selectedFiles.front) && !isCardA4Mode();
+            return fileInput.files.length <= 1 && !!selectedFiles.front && isImageFile(selectedFiles.front) && !isCardA4Mode();
         }
 
         function isDraggableA4Mode() {
@@ -694,6 +776,19 @@
             margins.forEach((edge) => {
                 previewData.append(`front_crop_${edge}`, document.getElementById(`front-crop-${edge}`).value);
             });
+            if (isPerspectiveEnabled('front')) {
+                previewData.append('front_perspective_enabled', 'on');
+                perspectiveCorners.forEach((corner) => {
+                    previewData.append(
+                        `front_perspective_${corner}_x`,
+                        document.getElementById(`front-perspective-${corner}-x`).value,
+                    );
+                    previewData.append(
+                        `front_perspective_${corner}_y`,
+                        document.getElementById(`front-perspective-${corner}-y`).value,
+                    );
+                });
+            }
             previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
             try {
                 const response = await fetch('/a4-image-preview', { method: 'POST', body: previewData });
@@ -737,10 +832,82 @@
             }
         }
 
-        function scheduleA4ImagePreviewRefresh() {
-            if (!isImageA4Mode()) return;
+        function scheduleA4ImagePreviewRefresh(side = activeSide) {
+            if (!isImageA4Mode() && !isCardA4Mode()) return;
             clearTimeout(a4PreviewRefreshTimer);
-            a4PreviewRefreshTimer = setTimeout(() => refreshA4ImagePreview(), 180);
+            a4PreviewRefreshTimer = setTimeout(() => {
+                if (isImageA4Mode()) {
+                    refreshA4ImagePreview();
+                } else {
+                    refreshA4CardPreview(side);
+                }
+            }, 180);
+        }
+
+        async function refreshA4CardPreview(side) {
+            const file = selectedFiles[side];
+            if (!isCardA4Mode() || !file || (side === 'back' && !aadhaarPair.checked)) return;
+            const requestId = ++a4CardPreviewRequests[side];
+            const previewData = new FormData();
+            previewData.append('file', file);
+            previewData.append('side', side);
+            previewData.append('page', selectedPdfPages[side]);
+            previewData.append('fit_card', 'on');
+            previewData.append(`${side}_crop_mode`, document.getElementById(side === 'front' ? 'crop-mode' : 'back-crop-mode').value);
+            previewData.append(`${side}_lighting_mode`, document.getElementById(side === 'front' ? 'lighting-mode' : 'back-lighting-mode').value);
+            previewData.append(`${side}_brightness`, document.getElementById(side === 'front' ? 'brightness' : 'back-brightness').value);
+            margins.forEach((edge) => {
+                previewData.append(`${side}_crop_${edge}`, document.getElementById(`${side}-crop-${edge}`).value);
+            });
+            if (isPerspectiveEnabled(side)) {
+                previewData.append(`${side}_perspective_enabled`, 'on');
+                perspectiveCorners.forEach((corner) => {
+                    previewData.append(
+                        `${side}_perspective_${corner}_x`,
+                        document.getElementById(`${side}-perspective-${corner}-x`).value,
+                    );
+                    previewData.append(
+                        `${side}_perspective_${corner}_y`,
+                        document.getElementById(`${side}-perspective-${corner}-y`).value,
+                    );
+                });
+            }
+            previewData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+            let newPreviewUrl = null;
+            try {
+                const response = await fetch('/a4-image-preview', { method: 'POST', body: previewData });
+                if (!response.ok) throw new Error(await response.text() || 'A4 card preview nahi ban saki.');
+                newPreviewUrl = URL.createObjectURL(await response.blob());
+                if (requestId !== a4CardPreviewRequests[side] || file !== selectedFiles[side]) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    newPreviewUrl = null;
+                    return;
+                }
+                const image = document.getElementById(side === 'front' ? 'a4-front-preview' : 'a4-back-preview');
+                await loadPreviewImage(image, newPreviewUrl);
+                if (requestId !== a4CardPreviewRequests[side] || file !== selectedFiles[side]) {
+                    URL.revokeObjectURL(newPreviewUrl);
+                    newPreviewUrl = null;
+                    return;
+                }
+                const oldPreviewUrl = a4CardPreviewUrls[side];
+                a4CardPreviewUrls[side] = newPreviewUrl;
+                newPreviewUrl = null;
+                if (oldPreviewUrl) URL.revokeObjectURL(oldPreviewUrl);
+                updatePreviewGrid();
+                document.getElementById('preview-error').hidden = true;
+            } catch (error) {
+                if (newPreviewUrl) URL.revokeObjectURL(newPreviewUrl);
+                if (requestId !== a4CardPreviewRequests[side]) return;
+                const errorMessage = document.getElementById('preview-error');
+                errorMessage.textContent = error.message;
+                errorMessage.hidden = false;
+            }
+        }
+
+        function refreshA4CardPreviews() {
+            refreshA4CardPreview('front');
+            refreshA4CardPreview('back');
         }
 
         function loadPreviewImage(image, source) {
@@ -774,8 +941,12 @@
                 a4LayoutPreviewUrl = null;
                 imageA4Layout = null;
             }
+            a4CardPreviewRequests[side] += 1;
+            if (a4CardPreviewUrls[side]) URL.revokeObjectURL(a4CardPreviewUrls[side]);
+            a4CardPreviewUrls[side] = null;
             releasePreviewUrl(side);
             selectedFiles[side] = file || null;
+            selectedPdfPages[side] = pdfPage;
             const button = document.getElementById(`edit-${side}-button`);
             const image = document.getElementById(side === 'front' ? 'preview-image' : 'back-preview-image');
             const icon = document.getElementById(`${side}-file-icon`);
@@ -869,11 +1040,18 @@
                 const previewOffsetY = verticalOffset / 841.89 * 100;
                 const previewOffsetX = horizontalOffset / 595.28 * 100;
                 combinedCards.style.transform = `translate(${previewOffsetX}%, ${previewOffsetY}%)`;
-                const a4FrontSource = imageMode && a4LayoutPreviewUrl ? a4LayoutPreviewUrl : previewUrls.front || '';
+                const a4FrontSource = imageMode && a4LayoutPreviewUrl
+                    ? a4LayoutPreviewUrl
+                    : cardMode && a4CardPreviewUrls.front
+                        ? a4CardPreviewUrls.front
+                        : previewUrls.front || '';
                 if (document.getElementById('a4-front-preview').src !== a4FrontSource) {
                     document.getElementById('a4-front-preview').src = a4FrontSource;
                 }
-                document.getElementById('a4-back-preview').src = previewUrls.back || previewUrls.front || '';
+                const backSource = cardMode && a4CardPreviewUrls.back
+                    ? a4CardPreviewUrls.back
+                    : previewUrls.back || previewUrls.front || '';
+                document.getElementById('a4-back-preview').src = backSource;
                 document.getElementById('a4-back-preview').hidden = !pairMode;
                 previewPair.classList.toggle('single-card', !pairMode && (cardMode || imageMode));
                 previewPair.classList.toggle('draggable-a4-mode', cardMode || imageMode);
@@ -921,8 +1099,13 @@
                 : 'inset(0)';
             const id = side === 'front' ? 'a4-front-preview' : 'a4-back-preview';
             const image = document.getElementById(id);
-            image.style.filter = filter;
-            image.style.clipPath = clip;
+            if (isCardA4Mode() && a4CardPreviewUrls[side]) {
+                image.style.filter = 'none';
+                image.style.clipPath = 'none';
+            } else {
+                image.style.filter = filter;
+                image.style.clipPath = clip;
+            }
             const miniImage = document.getElementById(side === 'front' ? 'combined-front-preview' : 'combined-back-preview');
             miniImage.style.filter = filter;
             miniImage.style.clipPath = clip;
@@ -932,6 +1115,45 @@
             return side === 'front'
                 ? { crop: 'crop-mode', lighting: 'lighting-mode', brightness: 'brightness', cropPanel: 'manual-crop', lightPanel: 'manual-light' }
                 : { crop: 'back-crop-mode', lighting: 'back-lighting-mode', brightness: 'back-brightness', cropPanel: 'back-manual-crop', lightPanel: 'back-manual-light' };
+        }
+
+        function isPerspectiveEnabled(side) {
+            return document.getElementById(`${side}-perspective`).checked;
+        }
+
+        function updatePerspectiveInputs(side) {
+            const points = perspectivePoints[side];
+            const polygon = document.getElementById('perspective-outline');
+            const isActiveSide = activeSide === side;
+            const overlay = document.getElementById('perspective-overlay');
+            overlay.hidden = !isActiveSide || !isPerspectiveEnabled(side) || cropImageWrap.hidden;
+            if (!overlay.hidden) {
+                polygon.setAttribute('points', perspectiveCorners.map((corner) =>
+                    points[corner].map((value) => (value * 1000).toFixed(1)).join(',')
+                ).join(' '));
+                perspectiveCorners.forEach((corner) => {
+                    const handle = overlay.querySelector(`[data-corner="${corner}"]`);
+                    handle.style.left = `${points[corner][0] * 100}%`;
+                    handle.style.top = `${points[corner][1] * 100}%`;
+                });
+            }
+            perspectiveCorners.forEach((corner) => {
+                const [x, y] = points[corner];
+                document.getElementById(`${side}-perspective-${corner}-x`).value = (x * 100).toFixed(2);
+                document.getElementById(`${side}-perspective-${corner}-y`).value = (y * 100).toFixed(2);
+            });
+        }
+
+        function hasValidPerspective(points) {
+            const corners = perspectiveCorners.map((corner) => points[corner]);
+            const crosses = corners.map((point, index) => {
+                const next = corners[(index + 1) % corners.length];
+                const after = corners[(index + 2) % corners.length];
+                return (next[0] - point[0]) * (after[1] - next[1])
+                    - (next[1] - point[1]) * (after[0] - next[0]);
+            });
+            return crosses.every((cross) => cross > 0.0001)
+                && corners.every(([x, y]) => x >= 0 && x <= 1 && y >= 0 && y <= 1);
         }
 
         function readSideSettings(side) {
@@ -960,6 +1182,7 @@
                 editorImage.style.clipPath = clip;
             }
             if (isCardA4Mode() && (side === 'front' || aadhaarPair.checked)) updateAadhaarPreviewAppearance(side);
+            if (activeSide === side) updateCropSelection();
             const brightnessValueId = side === 'front' ? 'brightness-value' : 'back-brightness-value';
             document.getElementById(brightnessValueId).textContent = `${settings.brightness}%`;
             margins.forEach((edge, index) => {
@@ -967,24 +1190,171 @@
             });
         }
 
+        function clamp(value, minimum, maximum) {
+            return Math.max(minimum, Math.min(maximum, value));
+        }
+
+        function getCropBox(side) {
+            const [top, right, bottom, left] = margins.map((edge) =>
+                Number(document.getElementById(`${side}-crop-${edge}`).value) / 100
+            );
+            return { x: left, y: top, width: 1 - left - right, height: 1 - top - bottom };
+        }
+
+        function setCropBox(side, box) {
+            const minimumSize = 0.101;
+            const width = clamp(box.width, minimumSize, 1);
+            const height = clamp(box.height, minimumSize, 1);
+            const left = clamp(box.x, 0, 1 - width);
+            const top = clamp(box.y, 0, 1 - height);
+            const values = {
+                top: top * 100,
+                right: (1 - left - width) * 100,
+                bottom: (1 - top - height) * 100,
+                left: left * 100,
+            };
+            margins.forEach((edge) => {
+                document.getElementById(`${side}-crop-${edge}`).value = values[edge].toFixed(1);
+            });
+            updateAdjustmentVisibility(side);
+            updateSummary();
+            scheduleA4ImagePreviewRefresh(side);
+        }
+
+        function updateCropSelection() {
+            const settings = readSideSettings(activeSide);
+            const perspectiveEnabled = isPerspectiveEnabled(activeSide);
+            const visible = !cropImageWrap.hidden && settings.cropMode === 'manual' && !perspectiveEnabled;
+            cropSelection.hidden = !visible;
+            document.getElementById('crop-instructions').hidden = cropImageWrap.hidden
+                || (settings.cropMode !== 'manual' && !perspectiveEnabled);
+            document.getElementById('crop-instructions').textContent = perspectiveEnabled
+                ? `${activeSide === 'back' ? 'Back' : 'Front'} card ke chaaron kone par green dots rakhein. Preview usi side ko seedha karke standard ID size mein dikhayega.`
+                : 'Image par kheench kar crop area select karein. Box ke andar drag karke jagah badlein, kone ke dots se size adjust karein.';
+            if (visible) {
+                const box = getCropBox(activeSide);
+                cropSelection.style.left = `${box.x * 100}%`;
+                cropSelection.style.top = `${box.y * 100}%`;
+                cropSelection.style.width = `${box.width * 100}%`;
+                cropSelection.style.height = `${box.height * 100}%`;
+            }
+            updatePerspectiveInputs(activeSide);
+        }
+
+        let activeCropPointer = null;
+        cropImageWrap.addEventListener('pointerdown', (event) => {
+            const target = event.target instanceof Element ? event.target : null;
+            const perspectiveHandle = target?.closest('.perspective-handle');
+            if (isPerspectiveEnabled(activeSide)) {
+                if (!perspectiveHandle) return;
+                event.preventDefault();
+                activeCropPointer = {
+                    pointerId: event.pointerId,
+                    side: activeSide,
+                    action: 'perspective',
+                    corner: perspectiveHandle.dataset.corner,
+                };
+                cropImageWrap.setPointerCapture(event.pointerId);
+                return;
+            }
+            if (readSideSettings(activeSide).cropMode !== 'manual') return;
+            const handle = target?.closest('.crop-selection-handle');
+            const initial = getCropBox(activeSide);
+            const fullImageSelected = initial.x < 0.01 && initial.y < 0.01
+                && initial.width > 0.98 && initial.height > 0.98;
+            const action = handle ? 'resize'
+                : target === cropSelection && !fullImageSelected ? 'move' : 'draw';
+            const rect = cropImageWrap.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            event.preventDefault();
+            activeCropPointer = {
+                pointerId: event.pointerId,
+                side: activeSide,
+                action,
+                corner: handle?.dataset.corner,
+                startX: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+                startY: clamp((event.clientY - rect.top) / rect.height, 0, 1),
+                box: initial,
+            };
+            cropImageWrap.setPointerCapture(event.pointerId);
+        });
+        cropImageWrap.addEventListener('pointermove', (event) => {
+            const drag = activeCropPointer;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const rect = cropImageWrap.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+            const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+            if (drag.action === 'perspective') {
+                const candidate = {
+                    ...perspectivePoints[drag.side],
+                    [drag.corner]: [x, y],
+                };
+                if (hasValidPerspective(candidate)) {
+                    perspectivePoints[drag.side] = candidate;
+                    updatePerspectiveInputs(drag.side);
+                    updatePreviewAppearance(drag.side);
+                    scheduleA4ImagePreviewRefresh(drag.side);
+                }
+                return;
+            }
+            let box;
+            if (drag.action === 'move') {
+                box = {
+                    ...drag.box,
+                    x: drag.box.x + x - drag.startX,
+                    y: drag.box.y + y - drag.startY,
+                };
+            } else {
+                const left = drag.action === 'resize' && drag.corner.endsWith('e') ? drag.box.x : drag.startX;
+                const right = drag.action === 'resize' && drag.corner.endsWith('w')
+                    ? drag.box.x + drag.box.width : x;
+                const top = drag.action === 'resize' && drag.corner.startsWith('s') ? drag.box.y : drag.startY;
+                const bottom = drag.action === 'resize' && drag.corner.startsWith('n')
+                    ? drag.box.y + drag.box.height : y;
+                box = {
+                    x: Math.min(left, right),
+                    y: Math.min(top, bottom),
+                    width: Math.abs(right - left),
+                    height: Math.abs(bottom - top),
+                };
+            }
+            setCropBox(drag.side, box);
+            updatePreviewAppearance(drag.side);
+        });
+        function finishCropPointer(event) {
+            if (activeCropPointer?.pointerId !== event.pointerId) return;
+            const side = activeCropPointer.side;
+            activeCropPointer = null;
+            scheduleA4ImagePreviewRefresh(side);
+        }
+        cropImageWrap.addEventListener('pointerup', finishCropPointer);
+        cropImageWrap.addEventListener('pointercancel', finishCropPointer);
+
         function setEditorSide(side) {
             activeSide = side;
             const image = document.getElementById('editor-image');
             const pdf = document.getElementById('editor-pdf');
             image.hidden = true;
+            cropImageWrap.hidden = true;
             pdf.hidden = true;
             if (previewUrls[side]) {
                 image.src = previewUrls[side];
                 image.hidden = false;
+                cropImageWrap.hidden = false;
                 updatePreviewAppearance(side);
             }
             document.getElementById('editor-title').textContent = side === 'front' ? 'Front · Crop & lighting' : 'Back · Crop & lighting';
+            document.querySelector('#front-perspective + span').textContent = 'Front photo tedhi ho? 4 corners se seedha karein';
+            document.querySelector('#back-perspective + span').textContent = 'Back photo tedhi ho? 4 corners se seedha karein';
             document.getElementById('front-adjustments').hidden = side !== 'front';
             document.getElementById('back-adjustments').hidden = side !== 'back';
             document.getElementById('front-tab').setAttribute('aria-selected', String(side === 'front'));
             document.getElementById('back-tab').setAttribute('aria-selected', String(side === 'back'));
             document.getElementById('editor-tabs').hidden = !aadhaarPair.checked;
             updateAdjustmentVisibility(side);
+            updateCropSelection();
+            scheduleA4ImagePreviewRefresh(side);
         }
 
         function updateAdjustmentVisibility(side) {
@@ -997,13 +1367,21 @@
 
         function openEditor(side) {
             activeSide = side;
-            originalSettings = [...editor.querySelectorAll('select, input[type="range"]')].map((input) => [input, input.value]);
+            originalSettings = [...editor.querySelectorAll('select, input[type="range"], input[type="checkbox"], input[type="hidden"][name*="_perspective_"]')].map((input) => [input, input.value]);
             setEditorSide(side);
             editor.showModal();
         }
 
         function cancelEditor() {
             if (originalSettings) originalSettings.forEach(([input, value]) => { input.value = value; });
+            for (const side of ['front', 'back']) {
+                perspectiveCorners.forEach((corner) => {
+                    perspectivePoints[side][corner] = [
+                        Number(document.getElementById(`${side}-perspective-${corner}-x`).value) / 100,
+                        Number(document.getElementById(`${side}-perspective-${corner}-y`).value) / 100,
+                    ];
+                });
+            }
             editor.close();
             updateSummary();
             updatePreviewAppearance('front');
@@ -1012,17 +1390,94 @@
 
         function updateBackFileRequirement() {
             const frontFile = selectedFiles.front;
-            backFileInput.required = aadhaarPair.checked && !!frontFile && !isPdf(frontFile);
-            document.getElementById('back-file-hint').textContent = isPdf(frontFile)
+            const sameImageAvailable = aadhaarPair.checked && isImageFile(frontFile);
+            document.getElementById('same-image-back-row').hidden = !sameImageAvailable;
+            document.getElementById('separate-images-back-row').hidden = !aadhaarPair.checked;
+            document.getElementById('separate-images-back-hint').hidden = !separateImagesBack.checked;
+            sameImageBack.disabled = !sameImageAvailable || separateImagesBack.checked;
+            separateImagesBack.disabled = !aadhaarPair.checked;
+            backFileInput.disabled = sameImageBack.checked || separateImagesBack.checked;
+            backFileInput.required = aadhaarPair.checked && !!frontFile && !isPdf(frontFile)
+                && !sameImageBack.checked && !separateImagesBack.checked;
+            const files = [...fileInput.files];
+            const totalSize = files.reduce((size, file) => size + file.size, 0);
+            fileInput.setCustomValidity(separateImagesBack.checked
+                && (files.length !== 2 || !files.every(isImageFile))
+                ? 'Aadhaar front aur back ke liye upar se theek 2 images ek saath chunein.'
+                : files.length > 10
+                    ? 'एक order में अधिकतम 10 files चुनें।'
+                    : totalSize > maxUploadSizeBytes ? `कुल upload size ${maxUploadSizeMb} MB से कम रखें।` : '');
+            document.getElementById('back-file-hint').textContent = separateImagesBack.checked
+                ? '(upar front aur back dono images chunein)'
+                : sameImageBack.checked
+                ? '(same photo front aur back ke liye use hogi)'
+                : isPdf(frontFile)
                 ? '(two-page PDF ho to optional)'
                 : '(front image ke saath required)';
         }
 
+        function updateBatchSelectionUI(files, pairedImages = false) {
+            const pairedSelection = aadhaarPair.checked && separateImagesBack.checked;
+            const isBatch = files.length > 1 && !pairedSelection;
+            const fileList = document.getElementById('selected-file-list');
+            const batchNote = document.getElementById('batch-layout-note');
+            const totalSize = files.reduce((size, file) => size + file.size, 0);
+            fileInput.setCustomValidity(pairedSelection && (files.length !== 2 || !files.every(isImageFile))
+                ? 'Aadhaar front aur back ke liye upar se theek 2 images ek saath chunein.'
+                : files.length > 10
+                ? 'एक order में अधिकतम 10 files चुनें।'
+                : totalSize > maxUploadSizeBytes ? `कुल upload size ${maxUploadSizeMb} MB से कम रखें।` : '');
+            document.getElementById('file-name').textContent = files.length
+                ? isBatch ? `${files.length} files selected` : files[0].name
+                : 'Select PDF or images';
+            document.getElementById('file-hint').textContent = files.length
+                ? `${(totalSize / (1024 * 1024)).toFixed(2)} MB / ${maxUploadSizeMb} MB total · PDF, JPG or PNG${pairedImages ? ' · pehli front, doosri back' : isBatch ? ' · same settings for all files' : ''}`
+                : `Up to 10 files · PDF, JPG or PNG · ${maxUploadSizeMb} MB total`;
+            document.getElementById('summary-file').textContent = isBatch
+                ? `${files.length} files · one print job`
+                : pairedImages ? `Front: ${files[0].name} · Back: ${files[1].name}`
+                : files[0]?.name || 'No file selected';
+            fileList.replaceChildren(...files.map((file) => {
+                const item = document.createElement('li');
+                item.textContent = file.name;
+                return item;
+            }));
+            fileList.hidden = !isBatch;
+            batchNote.hidden = !isBatch;
+            aadhaarPair.disabled = isBatch;
+            singleIdCardA4.disabled = isBatch;
+            if (isBatch) {
+                aadhaarPair.checked = false;
+                sameImageBack.checked = false;
+                separateImagesBack.checked = false;
+                singleIdCardA4.checked = false;
+                backFileInput.value = '';
+                backFileInput.required = false;
+                document.getElementById('back-file').hidden = true;
+                imageA4Layout = null;
+                for (const id of [
+                    'image-a4-enabled', 'a4-custom-layout',
+                ]) document.getElementById(id).value = '';
+                for (const id of [
+                    'image-a4-x', 'image-a4-y', 'image-a4-width', 'image-a4-height',
+                    'a4-layout-x', 'a4-layout-y', 'a4-layout-width', 'a4-layout-height',
+                ]) document.getElementById(id).value = '0';
+            }
+        }
+
         function updateSummary() {
             const selectedCopies = Math.max(1, Number(copiesInput.value) || 1);
+            const pairedFiles = aadhaarPair.checked && separateImagesBack.checked
+                && fileInput.files.length === 2 ? 2 : 0;
+            const selectedFileCount = Math.max(
+                1,
+                pairedFiles || fileInput.files.length + Number(aadhaarPair.checked && backFileInput.files[0] ? 1 : 0),
+            );
             copiesInput.value = selectedCopies;
             document.getElementById('summary-copies').textContent = selectedCopies;
-            document.getElementById('total-value').textContent = `₹${selectedCopies * 10}`;
+            document.getElementById('total-value').textContent = `₹${selectedFileCount * selectedCopies * 10}`;
+            document.getElementById('rate-note').textContent =
+                `₹10 × ${selectedFileCount} ${selectedFileCount === 1 ? 'file' : 'files'} × ${selectedCopies} ${selectedCopies === 1 ? 'copy' : 'copies'}`;
             document.getElementById('summary-colour').textContent = document.querySelector('input[name="print_type"]:checked').value === 'Color' ? 'Colour' : 'Black & white';
             document.getElementById('summary-payment').textContent = document.querySelector('input[name="payment_mode"]:checked').value === 'upi' ? 'UPI' : 'Cash at counter';
             document.getElementById('summary-paper').textContent = document.getElementById('paper-size').value;
@@ -1042,19 +1497,29 @@
         }
 
         fileInput.addEventListener('change', async () => {
-            const file = fileInput.files[0];
-            if (!file) return;
-            document.getElementById('file-name').textContent = file.name;
-            document.getElementById('file-hint').textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
-            document.getElementById('summary-file').textContent = file.name;
+            const files = [...fileInput.files];
+            const file = files[0] || null;
+            const pairedImages = aadhaarPair.checked && separateImagesBack.checked
+                && files.length === 2 && files.every(isImageFile);
+            updateBatchSelectionUI(files, pairedImages);
             await setSelectedFile('front', file);
-            if (aadhaarPair.checked && !backFileInput.files[0]) {
+            if (sameImageBack.checked && !isImageFile(file)) sameImageBack.checked = false;
+            if (pairedImages) {
+                await setSelectedFile('back', files[1]);
+            } else if (!files.length) {
+                await setSelectedFile('back', null);
+            } else if (aadhaarPair.checked && separateImagesBack.checked) {
+                await setSelectedFile('back', files[1] || null);
+            } else if (aadhaarPair.checked && sameImageBack.checked) {
+                await setSelectedFile('back', file);
+            } else if (aadhaarPair.checked && !backFileInput.files[0]) {
                 await setSelectedFile('back', isPdf(file) ? file : null, 1);
             }
             updatePreviewGrid();
             updateBackFileRequirement();
             updateSummary();
             if (isImageA4Mode()) await refreshA4ImagePreview(true);
+            else if (isCardA4Mode()) refreshA4CardPreviews();
         });
 
         backFileInput.addEventListener('change', async () => {
@@ -1062,6 +1527,39 @@
             await setSelectedFile('back', file);
             updatePreviewGrid();
             updateSummary();
+            if (isCardA4Mode()) refreshA4CardPreview('back');
+        });
+
+        sameImageBack.addEventListener('change', async () => {
+            if (sameImageBack.checked) {
+                separateImagesBack.checked = false;
+                backFileInput.value = '';
+            }
+            updateBackFileRequirement();
+            await setSelectedFile('back', sameImageBack.checked ? selectedFiles.front : backFileInput.files[0] || null);
+            updatePreviewGrid();
+            updateSummary();
+            if (isCardA4Mode()) refreshA4CardPreview('back');
+        });
+
+        separateImagesBack.addEventListener('change', async () => {
+            if (separateImagesBack.checked) {
+                sameImageBack.checked = false;
+                backFileInput.value = '';
+                await setSelectedFile('back', null);
+            }
+            updateBackFileRequirement();
+            updateBatchSelectionUI([...fileInput.files], aadhaarPair.checked
+                && separateImagesBack.checked && fileInput.files.length === 2
+                && [...fileInput.files].every(isImageFile));
+            if (separateImagesBack.checked && fileInput.files.length === 2
+                && [...fileInput.files].every(isImageFile)) {
+                await setSelectedFile('front', fileInput.files[0]);
+                await setSelectedFile('back', fileInput.files[1]);
+            }
+            updatePreviewGrid();
+            updateSummary();
+            if (isCardA4Mode()) refreshA4CardPreviews();
         });
 
         document.getElementById('edit-front-button').addEventListener('click', () => openEditor('front'));
@@ -1161,17 +1659,27 @@
             input.addEventListener('input', () => {
                 updateAdjustmentVisibility(activeSide);
                 updateSummary();
-                if (activeSide === 'front') scheduleA4ImagePreviewRefresh();
+                scheduleA4ImagePreviewRefresh(activeSide);
+            });
+            editor.querySelectorAll('input[type="checkbox"][id$="-perspective"]').forEach((input) => {
+                input.addEventListener('change', () => {
+                    updateCropSelection();
+                    scheduleA4ImagePreviewRefresh(activeSide);
+                });
             });
             input.addEventListener('change', () => {
                 updateAdjustmentVisibility(activeSide);
                 updateSummary();
-                if (activeSide === 'front') scheduleA4ImagePreviewRefresh();
+                scheduleA4ImagePreviewRefresh(activeSide);
             });
         });
         aadhaarPair.addEventListener('change', async () => {
             if (aadhaarPair.checked) singleIdCardA4.checked = false;
             document.getElementById('back-file').hidden = !aadhaarPair.checked;
+            if (!aadhaarPair.checked) {
+                sameImageBack.checked = false;
+                separateImagesBack.checked = false;
+            }
             const paperSize = document.getElementById('paper-size');
             if (isCardA4Mode()) paperSize.value = 'A4';
             paperSize.disabled = isCardA4Mode();
@@ -1184,6 +1692,7 @@
             }
             updatePreviewGrid();
             updateSummary();
+            if (isCardA4Mode()) refreshA4CardPreviews();
         });
         singleIdCardA4.addEventListener('change', () => {
             if (singleIdCardA4.checked) aadhaarPair.checked = false;
@@ -1195,6 +1704,7 @@
             updatePreviewGrid();
             updateSummary();
             if (isImageA4Mode()) refreshA4ImagePreview(true);
+            else if (isCardA4Mode()) refreshA4CardPreviews();
         });
         document.querySelectorAll('.stepper').forEach((button) => button.addEventListener('click', () => {
             copiesInput.value = Number(copiesInput.value || 1) + Number(button.dataset.step);
