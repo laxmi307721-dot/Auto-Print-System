@@ -26,7 +26,11 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 from urllib.parse import quote, urlencode
 from werkzeug.middleware.proxy_fix import ProxyFix
+from dotenv import load_dotenv
 from printing import get_sumatra_path, send_to_printer
+
+if not os.environ.get('VERCEL'):
+    load_dotenv()
 
 IS_VERCEL = bool(os.environ.get('VERCEL'))
 app = Flask(__name__, static_folder=None) if IS_VERCEL else Flask(__name__)
@@ -78,11 +82,16 @@ if IS_VERCEL:
     configured_password_hash = os.environ['ADMIN_PASSWORD_HASH']
 else:
     PASSWORD_HASH_FILE = os.path.join(app.instance_path, 'admin_password.hash')
-    if os.path.isfile(PASSWORD_HASH_FILE):
+    configured_password_hash = os.environ.get('ADMIN_PASSWORD_HASH', '')
+    if not configured_password_hash and os.path.isfile(PASSWORD_HASH_FILE):
         with open(PASSWORD_HASH_FILE, encoding='utf-8') as password_file:
-            configured_password_hash = password_file.read().strip()
-    else:
-        configured_password_hash = os.environ.get('ADMIN_PASSWORD_HASH', '')
+            stored_hash = password_file.read().strip()
+        if stored_hash.startswith('{'):
+            stored_override = json.loads(stored_hash)
+            if isinstance(stored_override, dict):
+                configured_password_hash = stored_override.get('password_hash', '')
+        else:
+            configured_password_hash = stored_hash
 app.config.update(
     ADMIN_EMAIL='sakshistudio2026@gmail.com',
     ADMIN_PASSWORD_HASH=configured_password_hash,
@@ -740,11 +749,14 @@ def save_admin_password_hash(password_hash):
             }),
         )
         return
+    override = json.dumps({
+        'base_hash': app.config['ADMIN_PASSWORD_HASH'],
+        'password_hash': password_hash,
+    })
     temporary_path = f"{PASSWORD_HASH_FILE}.tmp"
     with open(temporary_path, 'w', encoding='utf-8') as password_file:
-        password_file.write(password_hash)
+        password_file.write(override)
     os.replace(temporary_path, PASSWORD_HASH_FILE)
-    app.config['ADMIN_PASSWORD_HASH'] = password_hash
 
 def normalize_phone_number(value):
     digits = ''.join(character for character in value if character.isdigit())
@@ -827,6 +839,20 @@ def get_admin_password_hash():
             override = json.loads(stored_hash)
             if override.get('base_hash') == os.environ['ADMIN_PASSWORD_HASH']:
                 return override['password_hash']
+    elif os.path.isfile(PASSWORD_HASH_FILE):
+        with open(PASSWORD_HASH_FILE, encoding='utf-8') as password_file:
+            stored_hash = password_file.read().strip()
+        if stored_hash.startswith('{'):
+            override = json.loads(stored_hash)
+            if (
+                isinstance(override, dict)
+                and isinstance(override.get('base_hash'), str)
+                and isinstance(override.get('password_hash'), str)
+                and override['base_hash'] == app.config['ADMIN_PASSWORD_HASH']
+            ):
+                return override['password_hash']
+        elif not app.config['ADMIN_PASSWORD_HASH']:
+            return stored_hash
     return app.config['ADMIN_PASSWORD_HASH']
 
 def whatsapp_otp_is_configured():
@@ -1401,7 +1427,7 @@ def admin_login():
     return render_template(
         'admin_login.html',
         admin_email=app.config['ADMIN_EMAIL'],
-        password_configured=bool(app.config['ADMIN_PASSWORD_HASH']),
+        password_configured=bool(get_admin_password_hash()),
         error=error,
         success=success,
     )

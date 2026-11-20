@@ -60,7 +60,7 @@
         {% elif error %}
         <p class="message {% if not password_configured %}setup{% endif %}" role="alert">{{ error }}</p>
         {% elif not password_configured %}
-        <p class="message setup" role="alert">Sign-in enable karne ke liye Windows PowerShell mein <strong>ADMIN_PASSWORD_HASH</strong> set karke server restart karein.</p>
+        <p class="message setup" role="alert">Sign-in enable karne ke liye <strong>.env</strong> mein <strong>ADMIN_PASSWORD_HASH</strong> set karke server restart karein.</p>
         {% endif %}
     </main>
 </body>
