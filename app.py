@@ -1641,7 +1641,14 @@ def get_next_job():
         except RuntimeError:
             update_request(job, status='Printing', agent_claimed_at=None)
             raise
-        return jsonify({'id': job['id'], 'file_url': file_url})
+        return jsonify({
+            'id': job['id'],
+            'file_url': file_url,
+            'paper_size': job.get('paper_size', 'A4'),
+            'duplex': job.get('duplex', False),
+            'copies': job.get('copies', 1),
+            'print_type': job.get('print_type', 'Black & White'),
+        })
     return jsonify({
         'id': job['id'],
         'file_url': url_for('get_job_file', job_id=job['id'], _external=True),
