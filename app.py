@@ -1608,8 +1608,8 @@ def payment_status(req_id):
     return jsonify({'status': req['status']})
 
 def print_agent_is_local():
-    if IS_VERCEL:
-        token = os.environ['PRINT_AGENT_TOKEN']
+    token = os.environ.get('PRINT_AGENT_TOKEN')
+    if token:
         authorization = request.headers.get('Authorization', '')
         return hmac.compare_digest(authorization, f'Bearer {token}')
     return request.remote_addr in ('127.0.0.1', '::1')
@@ -1644,12 +1644,35 @@ def get_next_job():
         return jsonify({'id': job['id'], 'file_url': file_url})
     return jsonify({
         'id': job['id'],
-        'file_path': os.path.abspath(job['filepath']),
+        'file_url': url_for('get_job_file', job_id=job['id'], _external=True),
         'paper_size': job.get('paper_size', 'A4'),
         'duplex': job.get('duplex', False),
         'copies': job.get('copies', 1),
         'print_type': job.get('print_type', 'Black & White'),
     })
+
+@app.route('/get_job_file/<int:job_id>')
+def get_job_file(job_id):
+    if not print_agent_is_local():
+        return jsonify({'success': False, 'message': 'यह endpoint केवल print agent के लिए है।'}), 403
+
+    job = get_request(job_id)
+    if not job or job['status'] != 'Agent Printing' or SUPABASE_ENABLED:
+        return jsonify({'success': False, 'message': 'Print file उपलब्ध नहीं है।'}), 404
+
+    filepath = job.get('filepath')
+    if not filepath or not os.path.isfile(filepath):
+        return jsonify({'success': False, 'message': 'Print file उपलब्ध नहीं है।'}), 404
+
+    response = send_file(
+        filepath,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'print-job-{job_id}.pdf',
+        conditional=True,
+    )
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
 
 @app.route('/update_job_status', methods=['POST'])
 @csrf.exempt

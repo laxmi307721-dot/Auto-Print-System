@@ -2,8 +2,12 @@ import os
 import tempfile
 import threading
 import time
+from urllib.parse import urlsplit
 import requests
+from dotenv import load_dotenv
 from printing import send_to_printer
+
+load_dotenv()
 
 SERVER_URL = os.environ.get("PRINT_SERVER_URL", "http://localhost:5000").rstrip("/")
 PRINT_AGENT_TOKEN = os.environ.get("PRINT_AGENT_TOKEN", "")
@@ -19,13 +23,13 @@ def get_job_to_print():
         response = requests.get(
             f"{SERVER_URL}/get_next_job",
             headers=request_headers(),
-            timeout=15,
+            timeout=(10, 90),
         )
         if response.status_code == 200:
             return response.json()
-        print(f"Job check failed: HTTP {response.status_code} {response.text}")
+        print(f"Job check failed: HTTP {response.status_code} {response.text}", flush=True)
     except requests.RequestException as e:
-        print(f"Server se sampark nahi ho saka: {e}")
+        print(f"Server se sampark nahi ho saka: {e}", flush=True)
     return None
 
 def print_document(file_path, job=None):
@@ -48,10 +52,13 @@ def update_job_status(job_id, status):
         )
         response.raise_for_status()
     except requests.RequestException as e:
-        print(f"Status update error: {e}")
+        print(f"Status update error: {e}", flush=True)
 
 def download_job_file(file_url):
-    response = requests.get(file_url, stream=True, timeout=60)
+    headers = {}
+    if urlsplit(file_url)[:2] == urlsplit(SERVER_URL)[:2]:
+        headers = request_headers()
+    response = requests.get(file_url, headers=headers, stream=True, timeout=60)
     response.raise_for_status()
     temporary_file = tempfile.NamedTemporaryFile(prefix="print-job-", suffix=".pdf", delete=False)
     try:
@@ -73,7 +80,7 @@ def cleanup_temporary_file(file_path):
         print(f"Temporary print file cleanup failed: {e}")
 
 def run_agent():
-    print("Print Agent chal raha hai...")
+    print(f"Print Agent chal raha hai... Server: {SERVER_URL}", flush=True)
     while True:
         job = get_job_to_print()
         if job:
@@ -85,11 +92,11 @@ def run_agent():
                     temporary_file = download_job_file(job["file_url"])
                     file_path = temporary_file
                 except requests.RequestException as e:
-                    print(f"Job {job_id} download failed: {e}")
+                    print(f"Job {job_id} download failed: {e}", flush=True)
                     update_job_status(job_id, "Retry")
 
             if file_path and os.path.exists(file_path):
-                print(f"Job {job_id} print ho raha hai...")
+                print(f"Job {job_id} print ho raha hai...", flush=True)
                 if print_document(file_path, job):
                     update_job_status(job_id, "Printed")
                     if temporary_file:
