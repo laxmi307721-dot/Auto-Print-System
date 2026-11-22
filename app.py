@@ -1046,6 +1046,8 @@ def document_page_count():
                 page_count = 1
             elif back_file and back_file.filename:
                 page_count = 2
+            else:
+                page_count = min(2, page_count)
         return jsonify({'page_count': page_count})
     except ValueError as error:
         return str(error), 400
@@ -1256,7 +1258,7 @@ def upload_file():
             elif back_file and back_file.filename:
                 billable_file_count = 2
             else:
-                billable_file_count = get_uploaded_page_count(uploaded_files[0])
+                billable_file_count = min(2, get_uploaded_page_count(uploaded_files[0]))
         else:
             billable_file_count = sum(get_uploaded_page_count(uploaded_file) for uploaded_file in uploaded_files)
     except ValueError as error:

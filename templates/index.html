@@ -1909,39 +1909,73 @@
         }
 
         let summaryPageCountRequest = 0;
+        let pageCountSelectionKey = null;
+        let pageCountPromise = null;
+        const pageCountFileIds = new WeakMap();
+        let nextPageCountFileId = 0;
+        function getPageCountFileId(file) {
+            if (!pageCountFileIds.has(file)) pageCountFileIds.set(file, ++nextPageCountFileId);
+            return pageCountFileIds.get(file);
+        }
         async function updateSummary() {
             const selectedCopies = Math.max(1, Number(copiesInput.value) || 1);
-            let selectedFileCount = Math.max(1, fileInput.files.length);
-            if (aadhaarPair.checked && separateImagesBack.checked && fileInput.files.length === 2) {
-                selectedFileCount = 2;
-            } else if (aadhaarPair.checked && backFileInput.files[0]) {
-                selectedFileCount = 2;
-            } else if (aadhaarPair.checked && sameImageBack.checked) {
-                selectedFileCount = 1;
-            }
+            const selectedFiles = Array.from(fileInput.files);
+            const backFile = backFileInput.files[0];
+            const selectionKey = JSON.stringify({
+                files: selectedFiles.map(getPageCountFileId),
+                backFile: backFile ? getPageCountFileId(backFile) : null,
+                aadhaarPair: aadhaarPair.checked,
+                sameImageBack: sameImageBack.checked,
+                separateImagesBack: separateImagesBack.checked,
+            });
             copiesInput.value = selectedCopies;
             document.getElementById('summary-copies').textContent = selectedCopies;
             const requestNumber = ++summaryPageCountRequest;
-            try {
-                if (fileInput.files.length) {
+            const totalValue = document.getElementById('total-value');
+            const rateNote = document.getElementById('rate-note');
+            const submitButton = document.querySelector('.submit-button');
+            let selectedFileCount = 0;
+            if (!selectedFiles.length) {
+                selectedFileCount = 1;
+                pageCountSelectionKey = null;
+                pageCountPromise = null;
+                submitButton.disabled = false;
+            } else {
+                if (selectionKey !== pageCountSelectionKey) {
+                    pageCountSelectionKey = selectionKey;
                     const countData = new FormData();
-                    Array.from(fileInput.files).forEach((file) => countData.append('files', file, file.name));
-                    if (backFileInput.files[0]) countData.append('back_file', backFileInput.files[0], backFileInput.files[0].name);
+                    selectedFiles.forEach((file) => countData.append('files', file, file.name));
+                    if (backFile) countData.append('back_file', backFile, backFile.name);
                     if (aadhaarPair.checked) countData.append('aadhaar_pair', 'on');
                     if (sameImageBack.checked) countData.append('same_image_back', 'on');
                     countData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
-                    const response = await fetch('/document-page-count', { method: 'POST', body: countData });
-                    if (response.ok) {
-                        const count = await response.json();
-                        if (requestNumber === summaryPageCountRequest) selectedFileCount = Math.max(1, Number(count.page_count) || 1);
-                    }
+                    pageCountPromise = fetch('/document-page-count', { method: 'POST', body: countData })
+                        .then(async (response) => {
+                            if (!response.ok) throw new Error(await response.text() || 'Page count unavailable');
+                            const result = await response.json();
+                            if (!Number.isInteger(result.page_count) || result.page_count < 1) {
+                                throw new Error('Page count unavailable');
+                            }
+                            return result.page_count;
+                        });
                 }
-            } catch (error) {
-                // Keep the file-count estimate if page-count detection is unavailable.
+                totalValue.textContent = 'Calculating…';
+                rateNote.textContent = 'PDF pages are being counted.';
+                submitButton.disabled = true;
+                try {
+                    selectedFileCount = await pageCountPromise;
+                    if (requestNumber !== summaryPageCountRequest) return;
+                    submitButton.disabled = false;
+                } catch (error) {
+                    if (requestNumber !== summaryPageCountRequest) return;
+                    totalValue.textContent = 'Page count unavailable';
+                    rateNote.textContent = 'Reselect the file or try again before continuing.';
+                    return;
+                }
             }
             if (requestNumber !== summaryPageCountRequest) return;
-            document.getElementById('total-value').textContent = `₹${selectedFileCount * selectedCopies * 10}`;
-            document.getElementById('rate-note').textContent =
+            totalValue.textContent = `₹${selectedFileCount * selectedCopies * 10}`;
+            rateNote.textContent =
                 `₹10 × ${selectedFileCount} ${selectedFileCount === 1 ? 'page/file' : 'pages/files'} × ${selectedCopies} ${selectedCopies === 1 ? 'copy' : 'copies'}`;
             document.getElementById('summary-colour').textContent = document.querySelector('input[name="print_type"]:checked').value === 'Color' ? 'Colour' : 'Black & white';
             document.getElementById('summary-payment').textContent = document.querySelector('input[name="payment_mode"]:checked').value === 'upi' ? 'UPI' : 'Cash at counter';
