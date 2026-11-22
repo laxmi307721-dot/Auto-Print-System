@@ -304,6 +304,20 @@ def update_request(job, **changes):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_uploaded_page_count(uploaded_file):
+    if not uploaded_file or not uploaded_file.filename:
+        return 0
+    if not uploaded_file.filename.lower().endswith('.pdf'):
+        return 1
+    try:
+        pdf_data = uploaded_file.read()
+        if hasattr(uploaded_file, 'stream'):
+            uploaded_file.stream.seek(0)
+        with fitz.open(stream=pdf_data, filetype='pdf') as document:
+            return max(1, document.page_count)
+    except Exception:
+        raise ValueError('PDF file valid nahi hai.')
+
 def create_merchant_payment_qr(amount):
     qr = qrcode.QRCode(version=None, box_size=10, border=5)
     qr.add_data('upi://pay?' + urlencode({
@@ -1013,6 +1027,29 @@ def document_preview():
     except Exception:
         return "PDF preview create nahi ho saki", 400
 
+@app.route('/document-page-count', methods=['POST'])
+@limiter.limit('20 per minute')
+def document_page_count():
+    uploaded_files = [
+        uploaded_file for uploaded_file in request.files.getlist('files')
+        if uploaded_file and uploaded_file.filename
+    ]
+    back_file = request.files.get('back_file')
+    if not uploaded_files:
+        return jsonify({'page_count': 0})
+    try:
+        page_count = sum(get_uploaded_page_count(uploaded_file) for uploaded_file in uploaded_files)
+        aadhaar_pair = request.form.get('aadhaar_pair') == 'on'
+        same_image_back = request.form.get('same_image_back') == 'on'
+        if aadhaar_pair:
+            if same_image_back:
+                page_count = 1
+            elif back_file and back_file.filename:
+                page_count = 2
+        return jsonify({'page_count': page_count})
+    except ValueError as error:
+        return str(error), 400
+
 @app.route('/a4-image-preview', methods=['POST'])
 @limiter.limit('20 per minute')
 def a4_image_preview():
@@ -1207,16 +1244,25 @@ def upload_file():
         return "A4 preview ke andar image ka size aur jagah set karein", 400
     if payment_mode not in ('upi', 'cash'):
         return "गलत payment option चुना गया है", 400
-    billable_file_count = len(uploaded_files) + int(
-        bool(aadhaar_pair and back_file and back_file.filename)
-    )
-    price_per_file = 10
-    total_amount = price_per_file * billable_file_count * copies
 
     if any(not allowed_file(uploaded_file.filename) for uploaded_file in uploaded_files):
         return "सिर्फ PDF या JPG/PNG फाइल अपलोड करें", 400
     if back_file and back_file.filename and not allowed_file(back_file.filename):
         return "Back side ke liye bhi PDF ya JPG/PNG file chahiye", 400
+    try:
+        if aadhaar_pair:
+            if same_image_back:
+                billable_file_count = 1
+            elif back_file and back_file.filename:
+                billable_file_count = 2
+            else:
+                billable_file_count = get_uploaded_page_count(uploaded_files[0])
+        else:
+            billable_file_count = sum(get_uploaded_page_count(uploaded_file) for uploaded_file in uploaded_files)
+    except ValueError as error:
+        return str(error), 400
+    price_per_file = 10
+    total_amount = price_per_file * billable_file_count * copies
     if same_image_back and (
         not aadhaar_pair
         or not file.filename.lower().endswith(('.jpg', '.jpeg', '.png'))

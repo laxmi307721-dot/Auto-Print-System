@@ -1908,19 +1908,41 @@
             }
         }
 
-        function updateSummary() {
+        let summaryPageCountRequest = 0;
+        async function updateSummary() {
             const selectedCopies = Math.max(1, Number(copiesInput.value) || 1);
-            const pairedFiles = aadhaarPair.checked && separateImagesBack.checked
-                && fileInput.files.length === 2 ? 2 : 0;
-            const selectedFileCount = Math.max(
-                1,
-                pairedFiles || fileInput.files.length + Number(aadhaarPair.checked && backFileInput.files[0] ? 1 : 0),
-            );
+            let selectedFileCount = Math.max(1, fileInput.files.length);
+            if (aadhaarPair.checked && separateImagesBack.checked && fileInput.files.length === 2) {
+                selectedFileCount = 2;
+            } else if (aadhaarPair.checked && backFileInput.files[0]) {
+                selectedFileCount = 2;
+            } else if (aadhaarPair.checked && sameImageBack.checked) {
+                selectedFileCount = 1;
+            }
             copiesInput.value = selectedCopies;
             document.getElementById('summary-copies').textContent = selectedCopies;
+            const requestNumber = ++summaryPageCountRequest;
+            try {
+                if (fileInput.files.length) {
+                    const countData = new FormData();
+                    Array.from(fileInput.files).forEach((file) => countData.append('files', file, file.name));
+                    if (backFileInput.files[0]) countData.append('back_file', backFileInput.files[0], backFileInput.files[0].name);
+                    if (aadhaarPair.checked) countData.append('aadhaar_pair', 'on');
+                    if (sameImageBack.checked) countData.append('same_image_back', 'on');
+                    countData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+                    const response = await fetch('/document-page-count', { method: 'POST', body: countData });
+                    if (response.ok) {
+                        const count = await response.json();
+                        if (requestNumber === summaryPageCountRequest) selectedFileCount = Math.max(1, Number(count.page_count) || 1);
+                    }
+                }
+            } catch (error) {
+                // Keep the file-count estimate if page-count detection is unavailable.
+            }
+            if (requestNumber !== summaryPageCountRequest) return;
             document.getElementById('total-value').textContent = `₹${selectedFileCount * selectedCopies * 10}`;
             document.getElementById('rate-note').textContent =
-                `₹10 × ${selectedFileCount} ${selectedFileCount === 1 ? 'file' : 'files'} × ${selectedCopies} ${selectedCopies === 1 ? 'copy' : 'copies'}`;
+                `₹10 × ${selectedFileCount} ${selectedFileCount === 1 ? 'page/file' : 'pages/files'} × ${selectedCopies} ${selectedCopies === 1 ? 'copy' : 'copies'}`;
             document.getElementById('summary-colour').textContent = document.querySelector('input[name="print_type"]:checked').value === 'Color' ? 'Colour' : 'Black & white';
             document.getElementById('summary-payment').textContent = document.querySelector('input[name="payment_mode"]:checked').value === 'upi' ? 'UPI' : 'Cash at counter';
             document.getElementById('summary-paper').textContent = document.getElementById('paper-size').value;

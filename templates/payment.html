@@ -114,7 +114,7 @@
 		<p class="eyebrow">SAKSHI DIGITAL STUDIO</p>
 		<h1>पेमेंट करें</h1>
 		<p class="amount">₹{{ '%.2f'|format(total_amount) }}</p>
-		<p class="hint">{{ document_count }} {{ 'file' if document_count == 1 else 'files' }} × {{ copies }} {{ 'copy' if copies == 1 else 'copies' }} · ₹10 प्रति file प्रति copy</p>
+		<p class="hint">{{ document_count }} {{ 'page/file' if document_count == 1 else 'pages/files' }} × {{ copies }} {{ 'copy' if copies == 1 else 'copies' }} · ₹10 प्रति page/file प्रति copy</p>
 		<p class="hint">QR scan karein — order ki rakam UPI app mein apne-aap bhar jayegi</p>
 		<div class="qr-frame">
 			<img src="{{ url_for('payment_qr', req_id=request_id) }}" alt="₹{{ total_amount }} के लिए UPI QR कोड">
